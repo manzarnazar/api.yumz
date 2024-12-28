@@ -29,8 +29,8 @@ class StoreRequest extends BaseRequest
             'title.*'       => 'required|string|min:2|max:191',
             'description'   => 'array',
             'description.*' => 'string|min:3',
-            'images'        => 'required|array',
-            'images.*'      => 'required|string',
+            'images'        => 'nullable|array',
+            'images.*'      => 'nullable|string',
         ];
     }
 }
