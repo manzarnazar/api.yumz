@@ -633,6 +633,8 @@ class OrderRepository extends CoreRepository implements OrderRepoInterface
             ->select([
                 DB::raw("(DATE_FORMAT(created_at, '$type')) as time"),
                 DB::raw($select),
+				DB::raw('sum(commission_fee) as commission_fee') // Include commission_fee in the query
+
             ])
             ->groupBy('time')
             ->get();
