@@ -560,91 +560,94 @@ class OrderRepository extends CoreRepository implements OrderRepoInterface
 	}
 
 	public function ordersReportChart(array $filter): array
-	{
-		$dateFrom = date('Y-m-d 00:00:01', strtotime(data_get($filter, 'date_from')));
-		$dateTo   = date('Y-m-d 23:59:59', strtotime(data_get($filter, 'date_to', now())));
-		$shopId   = data_get($filter, 'shop_id');
+{
+    $dateFrom = date('Y-m-d 00:00:01', strtotime(data_get($filter, 'date_from')));
+    $dateTo   = date('Y-m-d 23:59:59', strtotime(data_get($filter, 'date_to', now())));
+    $shopId   = data_get($filter, 'shop_id');
 
-		$statistic = Order::where([
-			['created_at', '>=', $dateFrom],
-			['created_at', '<=', $dateTo],
-			['status', Order::STATUS_DELIVERED]
-		])
-			->when($shopId, fn($q, $shopId) => $q->where('shop_id', $shopId))
-			->select([
-				DB::raw('sum(total_price) as total_price'),
-				DB::raw('count(id) as count'),
-			])
-			->first();
+    // Include commission_fee in the statistic query
+    $statistic = Order::where([
+        ['created_at', '>=', $dateFrom],
+        ['created_at', '<=', $dateTo],
+        ['status', Order::STATUS_DELIVERED]
+    ])
+        ->when($shopId, fn($q, $shopId) => $q->where('shop_id', $shopId))
+        ->select([
+            DB::raw('sum(total_price) as total_price'),
+            DB::raw('sum(commission_fee) as total_commission_fee'), // Added commission_fee
+            DB::raw('count(id) as count'),
+        ])
+        ->first();
 
-		$quantity = OrderDetail::whereHas('order', fn($q) => $q
-			->select('id', 'status', 'created_at', 'shop_id')
-			->where('created_at', '>=', $dateFrom)
-			->where('created_at', '<=', $dateTo)
-			->where('status', Order::STATUS_DELIVERED)
-			->when($shopId, fn($q, $shopId) => $q->where('shop_id', $shopId))
-		)
-			->whereHas('stock', fn($q) => $q->whereNull('deleted_at'))
-			->sum('quantity');
+    $quantity = OrderDetail::whereHas('order', fn($q) => $q
+        ->select('id', 'status', 'created_at', 'shop_id')
+        ->where('created_at', '>=', $dateFrom)
+        ->where('created_at', '<=', $dateTo)
+        ->where('status', Order::STATUS_DELIVERED)
+        ->when($shopId, fn($q, $shopId) => $q->where('shop_id', $shopId))
+    )
+        ->whereHas('stock', fn($q) => $q->whereNull('deleted_at'))
+        ->sum('quantity');
 
-		$type = data_get($filter, 'type');
+    $type = data_get($filter, 'type');
 
-		$keys = ['count', 'price', 'quantity'];
+    $keys = ['count', 'price', 'quantity'];
 
-		$key  = in_array(data_get($filter, 'chart'), $keys) ? data_get($filter, 'chart') : 'count';
+    $key  = in_array(data_get($filter, 'chart'), $keys) ? data_get($filter, 'chart') : 'count';
 
-		$type = match ($type) {
-			'year'  => '%Y',
-			'week'  => '%w',
-			'month' => '%Y-%m',
-			default => '%Y-%m-%d',
-		};
+    $type = match ($type) {
+        'year'  => '%Y',
+        'week'  => '%w',
+        'month' => '%Y-%m',
+        default => '%Y-%m-%d',
+    };
 
-		$select = match ($key) {
-			'count' => 'count(id) as count',
-			'price' => 'sum(total_price) as price',
-			default => 'sum(quantity) as quantity',
-		};
+    $select = match ($key) {
+        'count' => 'count(id) as count',
+        'price' => 'sum(total_price) as price',
+        default => 'sum(quantity) as quantity',
+    };
 
-		if ($select === 'sum(quantity) as quantity') {
-			$chart = OrderDetail::whereHas('order',
-				fn($q) => $q
-					->select('id', 'status', 'created_at', 'shop_id')
-					->where('created_at', '>=', $dateFrom)
-					->where('created_at', '<=', $dateTo)
-					->where('status', Order::STATUS_DELIVERED)
-					->when(data_get($filter, 'shop_id'), fn($q, $shopId) => $q->where('shop_id', $shopId))
-			)
-				->select([
-					DB::raw("(DATE_FORMAT(created_at, '$type')) as time"),
-					DB::raw($select),
-				])
-				->groupBy('time')
-				->get();
-		} else {
-			$chart = Order::where([
-				['created_at', '>=', $dateFrom],
-				['created_at', '<=', $dateTo],
-				['status', Order::STATUS_DELIVERED]
-			])
-				->when(data_get($filter, 'shop_id'), fn($q, $shopId) => $q->where('shop_id', $shopId))
-				->select([
-					DB::raw("(DATE_FORMAT(created_at, '$type')) as time"),
-					DB::raw($select),
-				])
-				->groupBy('time')
-				->get();
-		}
+    if ($select === 'sum(quantity) as quantity') {
+        $chart = OrderDetail::whereHas('order',
+            fn($q) => $q
+                ->select('id', 'status', 'created_at', 'shop_id')
+                ->where('created_at', '>=', $dateFrom)
+                ->where('created_at', '<=', $dateTo)
+                ->where('status', Order::STATUS_DELIVERED)
+                ->when(data_get($filter, 'shop_id'), fn($q, $shopId) => $q->where('shop_id', $shopId))
+        )
+            ->select([
+                DB::raw("(DATE_FORMAT(created_at, '$type')) as time"),
+                DB::raw($select),
+            ])
+            ->groupBy('time')
+            ->get();
+    } else {
+        $chart = Order::where([
+            ['created_at', '>=', $dateFrom],
+            ['created_at', '<=', $dateTo],
+            ['status', Order::STATUS_DELIVERED]
+        ])
+            ->when(data_get($filter, 'shop_id'), fn($q, $shopId) => $q->where('shop_id', $shopId))
+            ->select([
+                DB::raw("(DATE_FORMAT(created_at, '$type')) as time"),
+                DB::raw($select),
+            ])
+            ->groupBy('time')
+            ->get();
+    }
 
-		return [
-			'chart'     => ChartRepository::chart($chart, $key),
-			'currency'  => $this->currency,
-			'count'     => data_get($statistic, 'count', 0),
-			'price'     => data_get($statistic, 'total_price', 0),
-			'quantity'  => (int)$quantity ?? 0,
-		];
+    return [
+        'chart'     => ChartRepository::chart($chart, $key),
+        'currency'  => $this->currency,
+        'count'     => data_get($statistic, 'count', 0),
+        'price'     => data_get($statistic, 'total_price', 0),
+        'quantity'  => (int)$quantity ?? 0,
+        'commission_fee' => data_get($statistic, 'total_commission_fee', 0), // Add commission_fee to the response
+    ];
+}
 
-	}
 
 	public function orderReportTransaction(array $filter): array
 	{
