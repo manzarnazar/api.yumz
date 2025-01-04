@@ -804,6 +804,7 @@ class OrderRepository extends CoreRepository implements OrderRepoInterface
 				'active'    => $order->user?->active,
 				'quantity'  => 0,
 				'price'     => $order->total_price,
+				'commission_fee'=> $order->commission_fee, // Add commission_fee here
 				'products'  => []
 			];
 
