@@ -559,11 +559,83 @@ class OrderRepository extends CoreRepository implements OrderRepoInterface
 		return $couponPrice > 0 ? $couponPrice * $this->currency() : 0;
 	}
 
+	public function ordersReportInvoice(array $filter): array
+{
+    $dateFrom = date('Y-m-d 00:00:01', strtotime(data_get($filter, 'date_from')));
+    $dateTo   = date('Y-m-d 23:59:59', strtotime(data_get($filter, 'date_to', now())));
+    $shopId   = data_get($filter, 'shop_id');
+    
+    // Fetch restaurant details
+    $shop = Shop::find($shopId);
+    
+    // Statistic summary
+    $statistic = Order::where([
+        ['created_at', '>=', $dateFrom],
+        ['created_at', '<=', $dateTo],
+        ['status', Order::STATUS_DELIVERED]
+    ])
+    ->when($shopId, fn($q) => $q->where('shop_id', $shopId))
+    ->select([
+        DB::raw('sum(total_price) as total_revenue'),
+        DB::raw('sum(commission_fee) as total_commission_fee'),
+        DB::raw('count(id) as total_orders'),
+    ])
+    ->first();
+
+    // Breakdown by date
+    $breakdown = Order::where([
+        ['created_at', '>=', $dateFrom],
+        ['created_at', '<=', $dateTo],
+        ['status', Order::STATUS_DELIVERED]
+    ])
+    ->when($shopId, fn($q) => $q->where('shop_id', $shopId))
+    ->select([
+        DB::raw("DATE_FORMAT(created_at, '%d/%m') as date"),
+        DB::raw('sum(total_price) as revenue'),
+        DB::raw('count(id) as orders'),
+        DB::raw('sum(commission_fee) as commission')
+    ])
+    ->groupBy('date')
+    ->orderBy('date')
+    ->get();
+
+    // Invoice data structure
+    return [
+        'invoice_number' => sprintf('%06d', rand(1, 999999)), // Generate random invoice number
+        'date'           => now()->format('d/m/Y'),
+        'period'         => [
+            'from' => date('d/m/Y', strtotime($dateFrom)),
+            'to'   => date('d/m/Y', strtotime($dateTo)),
+        ],
+        'restaurant'     => [
+            'name'    => $shop->name ?? 'Unknown Restaurant',
+            'address' => $shop->address ?? 'No Address Provided',
+        ],
+        'summary' => [
+            'total_revenue'    => data_get($statistic, 'total_revenue', 0),
+            'total_orders'     => data_get($statistic, 'total_orders', 0),
+            'total_commission' => data_get($statistic, 'total_commission_fee', 0),
+        ],
+        'breakdown' => $breakdown->map(function ($row) {
+            return [
+                'date'       => $row->date,
+                'orders'     => $row->orders,
+                'revenue'    => $row->revenue,
+                'commission' => $row->commission,
+            ];
+        }),
+        'total_payable' => data_get($statistic, 'total_revenue', 0) - data_get($statistic, 'total_commission_fee', 0),
+    ];
+}
+
+
 	public function ordersReportChart(array $filter): array
 {
     $dateFrom = date('Y-m-d 00:00:01', strtotime(data_get($filter, 'date_from')));
     $dateTo   = date('Y-m-d 23:59:59', strtotime(data_get($filter, 'date_to', now())));
     $shopId   = data_get($filter, 'shop_id');
+
+	
 
     // Include commission_fee in the statistic query
     $statistic = Order::where([
@@ -633,7 +705,7 @@ class OrderRepository extends CoreRepository implements OrderRepoInterface
             ->select([
                 DB::raw("(DATE_FORMAT(created_at, '$type')) as time"),
                 DB::raw($select),
-				DB::raw('sum(commission_fee) as commission_fee') // Include commission_fee in the query
+
 
             ])
             ->groupBy('time')

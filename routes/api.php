@@ -1218,6 +1218,7 @@ Route::group(['prefix' => 'v1', 'middleware' => ['block.ip']], function () {
             Route::get('products/report/chart',     [Admin\ProductController::class,    'reportChart']);
             Route::get('products/report/paginate',  [Admin\ProductController::class,    'reportPaginate']);
 
+            Route::get('orders/report/invoice',    	 [Admin\OrderController::class, 'reportInvoice']);
             /* Report Orders */
             Route::get('orders/report/chart',    	 [Admin\OrderController::class, 'reportChart']);
             Route::get('orders/report/transactions', [Admin\OrderController::class, 'reportTransactions']);

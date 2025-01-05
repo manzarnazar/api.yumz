@@ -429,6 +429,14 @@ class OrderController extends AdminBaseController
 		}
 	}
 
+	public function reportInvoice(OrderChartRequest $request): JsonResponse
+	{
+		$filter = $request->only(['date_from', 'date_to', 'shop_id']);
+		$invoiceData = $this->ordersReportInvoice($filter);
+
+		return response()->json($invoiceData);
+	}
+
 	public function reportTransactions(OrderTransactionRequest $request): JsonResponse
 	{
 		try {
