@@ -691,13 +691,10 @@ public function ordersReportInvoice(array $filter): array
 	$orders = Order::with([
 		'orderDetails' => fn($q) => $q->select('id', 'order_id', 'quantity')
 	])
-		->withSum([
-			'orderDetails' => fn($q) => $q->select('id', 'order_id', 'quantity')
-		], 'quantity')
 		->where('created_at', '>=', $dateFrom)
 		->where('created_at', '<=', $dateTo)
-		->whereIn('status', [Order::STATUS_DELIVERED, Order::STATUS_CANCELED])
-		->when(data_get($filter, 'shop_id'), fn($q, $shopId) => $q->where('shop_id', $shopId))
+		->whereIn('status', [Order::STATUS_DELIVERED])
+		->when(data_get($filter, 'shop_id'), fn($q, $shop) => $q->where('shop_id', $shop))
 		->select([
 			'created_at',
 			'id',
