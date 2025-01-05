@@ -595,7 +595,7 @@ class OrderRepository extends CoreRepository implements OrderRepoInterface
     ->first();
 
     return [
-        'restaurant' => data_get(optional($statistic->shop)->translation),
+        'restaurant' => data_get($statistic->shop)->translation,
         'total_orders' => data_get($statistic, 'total_orders', 0),
     ];
 }
