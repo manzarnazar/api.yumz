@@ -19,6 +19,7 @@ use App\Models\Product;
 use App\Models\ProductTranslation;
 use App\Models\Settings;
 use App\Models\Shop;
+use App\Models\ShopTranslation;
 use App\Models\Stock;
 use App\Models\Transaction;
 use App\Models\User;
@@ -578,7 +579,6 @@ class OrderRepository extends CoreRepository implements OrderRepoInterface
 
     // Get shop title (name) from shop_translations table
     $shopTitle = ShopTranslation::where('shop_id', $shopId)
-                                 ->where('locale', app()->getLocale()) // Using current locale
                                  ->value('title');
     
     // Default to shop's name if no translation is found
@@ -595,7 +595,7 @@ class OrderRepository extends CoreRepository implements OrderRepoInterface
     ->first();
 
     return [
-        'restaurant' => $restaurantName,
+        'restaurant' => data_get(optional($statistic->shop)->translation),
         'total_orders' => data_get($statistic, 'total_orders', 0),
     ];
 }
