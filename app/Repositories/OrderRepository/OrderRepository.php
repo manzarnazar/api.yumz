@@ -685,33 +685,17 @@ public function ordersReportInvoice(array $filter): array
     ])
     ->when($shopId, fn($q, $shopId) => $q->where('shop_id', $shopId))
     ->select([DB::raw('count(id) as total_orders'),
+	DB::raw('total_price as total_prices'),
 	DB::raw('sum(commission_fee) as total_commission_fee'),])
     ->first();
 
-	$orders = Order::with([
-		'orderDetails' => fn($q) => $q->select('id', 'order_id', 'quantity')
-	])
-		->where('created_at', '>=', $dateFrom)
-		->where('created_at', '<=', $dateTo)
-		->whereIn('status', [Order::STATUS_DELIVERED])
-		->when(data_get($filter, 'shop_id'), fn($q, $shop) => $q->where('shop_id', $shop))
-		->select([
-			'created_at',
-			'id',
-			'total_price',
-			'status',
-			'created_at',
-		])
-		->orderBy(data_get($filter, 'column', 'id'), data_get($filter, 'sort', 'desc'))
-		->get();
-
-
+	
 	
 
     return [
         'Date From' => $dateFrom,
         'Date To' => $dateTo,
-        'revenue' => data_get($orders, 'total_price', 0),
+        'revenue' => data_get($statistic, 'total_prices', 0),
         'restaurant' => $restaurantName,
         'total_orders' => data_get($statistic, 'total_orders', 0),
 		'commission_fee' => data_get($statistic, 'total_commission_fee', 0), // Add commission_fee to the response
