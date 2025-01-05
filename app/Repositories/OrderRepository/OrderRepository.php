@@ -701,7 +701,7 @@ public function ordersReportInvoice(array $filter): array
     return [
         'Date From' => $dateFrom,
         'Date To' => $dateTo,
-        'revenue' => $totalPrice,
+        'revenue' => $commissionFee,
         'restaurant' => $restaurantName,
         'total_orders' => data_get($statistic, 'total_orders', 0),
 		'commission_fee' => data_get($statistic, 'total_commission_fee', 0), // Add commission_fee to the response
