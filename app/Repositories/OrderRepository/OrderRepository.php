@@ -564,10 +564,17 @@ class OrderRepository extends CoreRepository implements OrderRepoInterface
     $dateFrom = date('Y-m-d 00:00:01', strtotime(data_get($filter, 'date_from')));
     $dateTo   = date('Y-m-d 23:59:59', strtotime(data_get($filter, 'date_to', now())));
     $shopId   = data_get($filter, 'shop_id');
-    
-    // Fetch restaurant details
+
+    // Fetch restaurant details with error handling
     $shop = Shop::find($shopId);
-    
+
+    if (!$shop) {
+        // Fallback if the shop is not found
+        $shop = new Shop();
+        $shop->name = 'Unknown Restaurant';
+        $shop->address = 'No Address Provided';
+    }
+
     // Statistic summary
     $statistic = Order::where([
         ['created_at', '>=', $dateFrom],
@@ -608,8 +615,8 @@ class OrderRepository extends CoreRepository implements OrderRepoInterface
             'to'   => date('d/m/Y', strtotime($dateTo)),
         ],
         'restaurant'     => [
-            'name'    => $shop->name ?? 'Unknown Restaurant',
-            'address' => $shop->address ?? 'No Address Provided',
+            'name'    => $shop->name,
+            'address' => $shop->address,
         ],
         'summary' => [
             'total_revenue'    => data_get($statistic, 'total_revenue', 0),
