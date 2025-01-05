@@ -673,11 +673,14 @@ public function ordersReportInvoice(array $filter): array
     }
 
 
-    $shopTitle = ShopTranslation::where('shop_id', $shopId)
-                                 ->select('title','address');
-    
-    $restaurantName = $shopTitle ?? $shop->name ?? 'Unknown Restaurant';
-	$address = $shopTitle->address ?? 'N/A'; 
+	$shopTranslation = ShopTranslation::where('shop_id', $shop)
+	->select('title', 'address')
+	->first(); // Fetch the first record matching the locale
+
+// Default to shop's name and address if no translation is found
+$restaurantName = $shopTranslation->title ?? $shop->name ?? 'Unknown Restaurant';
+$address = $shopTranslation->address ?? 'N/A'; // Default address if not available
+
     $statistic = Order::where([
         ['created_at', '>=', $dateFrom],
         ['created_at', '<=', $dateTo],
