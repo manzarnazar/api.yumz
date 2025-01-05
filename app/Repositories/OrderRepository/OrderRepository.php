@@ -560,46 +560,7 @@ class OrderRepository extends CoreRepository implements OrderRepoInterface
 		return $couponPrice > 0 ? $couponPrice * $this->currency() : 0;
 	}
 
-	public function ordersReportInvoice(array $filter): array
-{
-    $dateFrom = date('Y-m-d 00:00:01', strtotime(data_get($filter, 'date_from')));
-    $dateTo   = date('Y-m-d 23:59:59', strtotime(data_get($filter, 'date_to', now())));
-    $shopId   = data_get($filter, 'shop_id');
-    
-    // Fetch restaurant details
-    $shop = Shop::find($shopId);
-
-    // Ensure that shop exists
-    if (!$shop) {
-        return [
-            'restaurant' => 'Unknown Restaurant',
-            'total_orders' => 0,
-        ];
-    }
-
-    // Get shop title (name) from shop_translations table
-    $shopTitle = ShopTranslation::where('shop_id', $shopId)
-                                 ->value('title');
-    
-    // Default to shop's name if no translation is found
-    $restaurantName = $shopTitle ?? $shop->name ?? 'Unknown Restaurant';
-
-    // Statistic summary: Fetch only the number of orders
-    $statistic = Order::where([
-        ['created_at', '>=', $dateFrom],
-        ['created_at', '<=', $dateTo],
-        ['status', Order::STATUS_DELIVERED]
-    ])
-    ->when($shopId, fn($q, $shopId) => $q->where('shop_id', $shopId))
-    ->select([DB::raw('count(id) as total_orders')])
-    ->first();
-
-    return [
-        'restaurant' => $restaurantName,
-        'total_orders' => data_get($statistic, 'total_orders', 0),
-    ];
-}
-
+	
 
 	public function ordersReportChart(array $filter): array
 {
@@ -693,6 +654,47 @@ class OrderRepository extends CoreRepository implements OrderRepoInterface
         'commission_fee' => data_get($statistic, 'total_commission_fee', 0), // Add commission_fee to the response
     ];
 }
+
+public function ordersReportInvoice(array $filter): array
+{
+    $dateFrom = date('Y-m-d 00:00:01', strtotime(data_get($filter, 'date_from')));
+    $dateTo   = date('Y-m-d 23:59:59', strtotime(data_get($filter, 'date_to', now())));
+    $shopId   = data_get($filter, 'shop_id');
+    
+    // Fetch restaurant details
+    $shop = Shop::find($shopId);
+
+    // Ensure that shop exists
+    if (!$shop) {
+        return [
+            'restaurant' => 'Unknown Restaurant',
+            'total_orders' => 0,
+        ];
+    }
+
+
+    $shopTitle = ShopTranslation::where('shop_id', $shopId)
+                                 ->value('title');
+    
+    $restaurantName = $shopTitle ?? $shop->name ?? 'Unknown Restaurant';
+
+    $statistic = Order::where([
+        ['created_at', '>=', $dateFrom],
+        ['created_at', '<=', $dateTo],
+        ['status', Order::STATUS_DELIVERED]
+    ])
+    ->when($shopId, fn($q, $shopId) => $q->where('shop_id', $shopId))
+    ->select([DB::raw('count(id) as total_orders'),
+	DB::raw('sum(commission_fee) as total_commission_fee'),])
+    ->first();
+
+    return [
+        'restaurant' => $restaurantName,
+        'total_orders' => data_get($statistic, 'total_orders', 0),
+		'commission_fee' => data_get($statistic, 'total_commission_fee', 0), // Add commission_fee to the response
+    ];
+}
+
 
 
 	public function orderReportTransaction(array $filter): array
