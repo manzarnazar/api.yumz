@@ -673,13 +673,10 @@ public function ordersReportInvoice(array $filter): array
     }
 
 
-	$shopTranslation = ShopTranslation::where('shop_id', $shop)
-	->select('title', 'address')
-	->first(); // Fetch the first record matching the locale
-
-// Default to shop's name and address if no translation is found
-$restaurantName = $shopTranslation->title ?? $shop->name ?? 'Unknown Restaurant';
-$address = $shopTranslation->address ?? 'N/A'; // Default address if not available
+    $shopTitle = ShopTranslation::where('shop_id', $shopId)
+                                 ->value('title');
+    
+    $restaurantName = $shopTitle ?? $shop->name ?? 'Unknown Restaurant';
 
     $statistic = Order::where([
         ['created_at', '>=', $dateFrom],
@@ -688,7 +685,7 @@ $address = $shopTranslation->address ?? 'N/A'; // Default address if not availab
     ])
     ->when($shopId, fn($q, $shopId) => $q->where('shop_id', $shopId))
     ->select([DB::raw('count(id) as total_orders'),
-	DB::raw('sum(total_price) as total_prices'),
+	DB::raw('total_price as total_prices'),
 	DB::raw('sum(commission_fee) as total_commission_fee'),])
     ->first();
 
@@ -696,9 +693,8 @@ $address = $shopTranslation->address ?? 'N/A'; // Default address if not availab
 	
 
     return [
-        'date From' => $dateFrom,
-        'date To' => $dateTo,
-		'address' => $address,
+        'Date From' => $dateFrom,
+        'Date To' => $dateTo,
         'revenue' => data_get($statistic, 'total_prices', 0),
         'restaurant' => $restaurantName,
         'total_orders' => data_get($statistic, 'total_orders', 0),
