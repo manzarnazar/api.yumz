@@ -660,7 +660,7 @@ public function ordersReportInvoice(array $filter): array
     $dateFrom = date('Y-m-d 00:00:01', strtotime(data_get($filter, 'date_from')));
     $dateTo   = date('Y-m-d 23:59:59', strtotime(data_get($filter, 'date_to', now())));
     $shopId   = data_get($filter, 'shop_id');
-    
+
     // Fetch restaurant details
     $shop = Shop::find($shopId);
 
@@ -672,14 +672,13 @@ public function ordersReportInvoice(array $filter): array
         ];
     }
 
-
-    $shopTitle = ShopTranslation::where('shop_id', $shopId)
-                                 ->value('title');
-								 $address = ShopTranslation::where('shop_id', $shopId)
-                                 ->value('address');
+    // Fetch shop translation details
+    $shopTitle = ShopTranslation::where('shop_id', $shopId)->value('title');
+    $address   = ShopTranslation::where('shop_id', $shopId)->value('address');
     
     $restaurantName = $shopTitle ?? $shop->name ?? 'Unknown Restaurant';
 
+    // Fetch statistics for the given period
     $statistic = Order::where([
         ['created_at', '>=', $dateFrom],
         ['created_at', '<=', $dateTo],
@@ -687,23 +686,56 @@ public function ordersReportInvoice(array $filter): array
     ])
     ->when($shopId, fn($q, $shopId) => $q->where('shop_id', $shopId))
     ->select([DB::raw('count(id) as total_orders'),
-	DB::raw('sum(total_price) as total_prices'),
-	DB::raw('sum(commission_fee) as total_commission_fee'),])
+        DB::raw('sum(total_price) as total_prices'),
+        DB::raw('sum(commission_fee) as total_commission_fee')])
     ->first();
 
-	
-	
+    // Get the total revenue, total orders, and commission fee
+    $totalRevenue = data_get($statistic, 'total_prices', 0);
+    $totalOrders = data_get($statistic, 'total_orders', 0);
+    $commissionFee = data_get($statistic, 'total_commission_fee', 0);
 
+    // Prepare the breakdown (e.g., monthly breakdown)
+    $breakdown = [];
+    $date = $dateFrom;
+    while (strtotime($date) <= strtotime($dateTo)) {
+        $month = date('m', strtotime($date));
+        $monthOrders = Order::where('created_at', 'LIKE', date('Y-' . $month . '-%'))
+                            ->where('shop_id', $shopId)
+                            ->where('status', Order::STATUS_DELIVERED)
+                            ->count();
+        $monthRevenue = Order::where('created_at', 'LIKE', date('Y-' . $month . '-%'))
+                             ->where('shop_id', $shopId)
+                             ->where('status', Order::STATUS_DELIVERED)
+                             ->sum('total_price');
+        $monthCommission = $monthRevenue * 0.10;  // Assuming 10% commission rate
+
+        $breakdown[] = [
+            'month' => date('d/m', strtotime($date)),
+            'orders' => $monthOrders,
+            'revenue' => $monthRevenue,
+            'commission' => $monthCommission
+        ];
+
+        // Increment by month
+        $date = date('Y-m-d', strtotime("+1 month", strtotime($date)));
+    }
+
+    // Format the final invoice data
     return [
-        'date_from' => $dateFrom,
-        'date_to' => $dateTo,
-        'address' => $address,
-        'revenue' => data_get($statistic, 'total_prices', 0),
-        'restaurant' => $restaurantName,
-        'total_orders' => data_get($statistic, 'total_orders', 0),
-		'commission_fee' => data_get($statistic, 'total_commission_fee', 0), // Add commission_fee to the response
+        'invoice_number' => '001234',
+        'date' => date('d/m/Y'),
+        'period' => date('d/m/Y', strtotime($dateFrom)) . ' - ' . date('d/m/Y', strtotime($dateTo)),
+        'restaurant_name' => $restaurantName,
+        'restaurant_address' => $address,
+        'total_revenue' => number_format($totalRevenue, 2) . ' DKK',
+        'total_orders' => $totalOrders,
+        'commission_fee' => number_format($commissionFee, 2) . ' DKK',
+        'breakdown' => $breakdown,
+        'total_payable_to_restaurant' => number_format($totalRevenue - $commissionFee, 2) . ' DKK'
     ];
 }
+
 
 
 
