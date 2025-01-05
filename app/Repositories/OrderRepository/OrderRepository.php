@@ -685,7 +685,7 @@ public function ordersReportInvoice(array $filter): array
     ])
     ->when($shopId, fn($q, $shopId) => $q->where('shop_id', $shopId))
     ->select([DB::raw('count(id) as total_orders'),
-	DB::raw('total_price as total_prices'),
+	DB::raw('sum(total_price) as total_prices'),
 	DB::raw('sum(commission_fee) as total_commission_fee'),])
     ->first();
 
