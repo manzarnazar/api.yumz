@@ -564,26 +564,17 @@ class OrderRepository extends CoreRepository implements OrderRepoInterface
     $dateFrom = date('Y-m-d 00:00:01', strtotime(data_get($filter, 'date_from')));
     $dateTo   = date('Y-m-d 23:59:59', strtotime(data_get($filter, 'date_to', now())));
     $shopId   = data_get($filter, 'shop_id');
-
-    // Fetch restaurant details with error handling
+    
+    // Fetch restaurant details
     $shop = Shop::find($shopId);
-
-    if (!$shop) {
-        // Log or handle the case where shop is not found
-        \Log::error("Shop not found for shop_id: {$shopId}");
-        // Fallback to default values if the shop is not found
-        $shop = new Shop();
-        $shop->name = 'Unknown Restaurant';
-        $shop->address = 'No Address Provided';
-    }
-
+    
     // Statistic summary
     $statistic = Order::where([
         ['created_at', '>=', $dateFrom],
         ['created_at', '<=', $dateTo],
         ['status', Order::STATUS_DELIVERED]
     ])
-    ->when($shopId, fn($q) => $q->where('shop_id', $shopId))
+    ->when($shopId, fn($q, $shopId) => $q->where('shop_id', $shopId))
     ->select([
         DB::raw('sum(total_price) as total_revenue'),
         DB::raw('sum(commission_fee) as total_commission_fee'),
@@ -591,18 +582,13 @@ class OrderRepository extends CoreRepository implements OrderRepoInterface
     ])
     ->first();
 
-    // Log or handle the case where statistic is empty
-    if (!$statistic) {
-        \Log::error("No orders found for the given date range and shop_id: {$shopId}");
-    }
-
     // Breakdown by date
     $breakdown = Order::where([
         ['created_at', '>=', $dateFrom],
         ['created_at', '<=', $dateTo],
         ['status', Order::STATUS_DELIVERED]
     ])
-    ->when($shopId, fn($q) => $q->where('shop_id', $shopId))
+	->when($shopId, fn($q, $shopId) => $q->where('shop_id', $shopId))
     ->select([
         DB::raw("DATE_FORMAT(created_at, '%d/%m') as date"),
         DB::raw('sum(total_price) as revenue'),
@@ -622,8 +608,8 @@ class OrderRepository extends CoreRepository implements OrderRepoInterface
             'to'   => date('d/m/Y', strtotime($dateTo)),
         ],
         'restaurant'     => [
-            'name'    => $shop->name,
-            'address' => $shop->address,
+            'name'    => $shop->name ?? 'Unknown Restaurant',
+            'address' => $shop->address ?? 'No Address Provided',
         ],
         'summary' => [
             'total_revenue'    => data_get($statistic, 'total_revenue', 0),
