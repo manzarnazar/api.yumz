@@ -576,6 +576,14 @@ class OrderRepository extends CoreRepository implements OrderRepoInterface
         ];
     }
 
+    // Get shop title (name) from shop_translations table
+    $shopTitle = ShopTranslation::where('shop_id', $shopId)
+                                 ->where('locale', app()->getLocale()) // Using current locale
+                                 ->value('title');
+    
+    // Default to shop's name if no translation is found
+    $restaurantName = $shopTitle ?? $shop->name ?? 'Unknown Restaurant';
+
     // Statistic summary: Fetch only the number of orders
     $statistic = Order::where([
         ['created_at', '>=', $dateFrom],
@@ -587,7 +595,7 @@ class OrderRepository extends CoreRepository implements OrderRepoInterface
     ->first();
 
     return [
-        'restaurant' => $shop->name ?? 'Unknown Restaurant',
+        'restaurant' => $restaurantName,
         'total_orders' => data_get($statistic, 'total_orders', 0),
     ];
 }
