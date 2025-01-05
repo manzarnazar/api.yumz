@@ -674,7 +674,9 @@ public function ordersReportInvoice(array $filter): array
 
 
     $shopTitle = ShopTranslation::where('shop_id', $shopId)
-                                 ->value('title');
+                                 ->select([DB::raw('title as name'),
+								 DB::raw('address as address')
+								]);
     
     $restaurantName = $shopTitle ?? $shop->name ?? 'Unknown Restaurant';
 
@@ -695,6 +697,7 @@ public function ordersReportInvoice(array $filter): array
     return [
         'Date From' => $dateFrom,
         'Date To' => $dateTo,
+        'address' => data_get($shopTitle, 'address', 0),
         'revenue' => data_get($statistic, 'total_prices', 0),
         'restaurant' => $restaurantName,
         'total_orders' => data_get($statistic, 'total_orders', 0),
