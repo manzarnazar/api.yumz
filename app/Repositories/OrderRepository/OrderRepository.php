@@ -688,20 +688,33 @@ public function ordersReportInvoice(array $filter): array
 	DB::raw('sum(commission_fee) as total_commission_fee'),])
     ->first();
 
-	$sumOrders = $statistic->get();
+	$orders = Order::with([
+		'orderDetails' => fn($q) => $q->select('id', 'order_id', 'quantity')
+	])
+		->withSum([
+			'orderDetails' => fn($q) => $q->select('id', 'order_id', 'quantity')
+		], 'quantity')
+		->where('created_at', '>=', $dateFrom)
+		->where('created_at', '<=', $dateTo)
+		->whereIn('status', [Order::STATUS_DELIVERED, Order::STATUS_CANCELED])
+		->when(data_get($filter, 'shop_id'), fn($q, $shopId) => $q->where('shop_id', $shopId))
+		->select([
+			'created_at',
+			'id',
+			'total_price',
+			'status',
+			'created_at',
+		])
+		->orderBy(data_get($filter, 'column', 'id'), data_get($filter, 'sort', 'desc'))
+		->get();
 
-		$tax 			= $sumOrders->sum('tax');
-		$coupon			= $sumOrders->sum('coupon_sum_price');
-		$pointHistory	= $sumOrders->sum('point_histories_sum_price');
-		$commissionFee  = $sumOrders->sum('commission_fee');
-		$deliveryFee 	= $sumOrders->sum('delivery_fee');
-		$serviceFee 	= $sumOrders->sum('service_fee');
-		$totalPrice 	= $sumOrders->sum('total_price');
+
+	
 
     return [
         'Date From' => $dateFrom,
         'Date To' => $dateTo,
-        'revenue' => $commissionFee,
+        'revenue' => data_get($orders, 'total_price', 0),
         'restaurant' => $restaurantName,
         'total_orders' => data_get($statistic, 'total_orders', 0),
 		'commission_fee' => data_get($statistic, 'total_commission_fee', 0), // Add commission_fee to the response
