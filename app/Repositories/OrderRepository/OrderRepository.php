@@ -569,7 +569,9 @@ class OrderRepository extends CoreRepository implements OrderRepoInterface
     $shop = Shop::find($shopId);
 
     if (!$shop) {
-        // Fallback if the shop is not found
+        // Log or handle the case where shop is not found
+        \Log::error("Shop not found for shop_id: {$shopId}");
+        // Fallback to default values if the shop is not found
         $shop = new Shop();
         $shop->name = 'Unknown Restaurant';
         $shop->address = 'No Address Provided';
@@ -588,6 +590,11 @@ class OrderRepository extends CoreRepository implements OrderRepoInterface
         DB::raw('count(id) as total_orders'),
     ])
     ->first();
+
+    // Log or handle the case where statistic is empty
+    if (!$statistic) {
+        \Log::error("No orders found for the given date range and shop_id: {$shopId}");
+    }
 
     // Breakdown by date
     $breakdown = Order::where([
