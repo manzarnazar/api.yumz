@@ -34,6 +34,7 @@ class ShopResource extends JsonResource
             'price_per_km'      => $this->when($this->rate_price_per_km, $this->rate_price_per_km),
             'tax'               => $this->tax,
             'service_fee'       => $this->when($this->service_fee, $this->service_fee),
+            'fixed_commission'        => $this->when($this->fixed_commission, $this->fixed_commission),
             'percentage'        => $this->when($this->percentage, $this->percentage),
             'phone'             => $this->when($this->phone, $this->phone),
             'wifi_password'     => $this->when($this->wifi_password, $this->wifi_password),

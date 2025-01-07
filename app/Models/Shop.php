@@ -32,6 +32,7 @@ use Illuminate\Support\Carbon;
  * @property float $tax
  * @property float $rate_tax
  * @property float $percentage
+ * @property float $fixed_commission
  * @property array|null $location
  * @property string|null $phone
  * @property int|null $show_type
@@ -114,6 +115,7 @@ use Illuminate\Support\Carbon;
  * @method static Builder|self whereOpen($value)
  * @method static Builder|self whereOpenTime($value)
  * @method static Builder|self wherePercentage($value)
+ * @method static Builder|self whereFixedCommission($value)
  * @method static Builder|self wherePhone($value)
  * @method static Builder|self whereShowType($value)
  * @method static Builder|self whereStatus($value)
