@@ -158,10 +158,10 @@ class ShopController extends AdminBaseController
             abort(403);
         }
 
-        return response()->json([
-            'commission_received' => $request->input('fixed_commission'),
-            'all_parameters' => $request->all()
-        ]);
+        return $this->successResponse(
+            __('errors.' . ResponseError::RECORD_WAS_SUCCESSFULLY_UPDATED, locale: $this->language),
+            ShopResource::make(data_get($result, 'data'))
+        );
     }
 
     /**

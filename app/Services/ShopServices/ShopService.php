@@ -208,6 +208,7 @@ class ShopService extends CoreService implements ShopServiceInterface
             'tax'            => data_get($data, 'tax', $shop?->tax),
 			'email_statuses' => data_get($data, 'email_statuses'),
 			'percentage'     => data_get($data, 'percentage', $shop?->percentage ?? 0),
+			'fixed_commission' => data_get($data, 'fixed_commission', $shop?->fixed_commission ?? 0),
             'min_amount'     => data_get($data, 'min_amount', $shop?->min_amount ?? 0),
             'phone'          => data_get($data, 'phone'),
             'order_payment'  => data_get($data, 'order_payment', Shop::ORDER_PAYMENT_BEFORE),
