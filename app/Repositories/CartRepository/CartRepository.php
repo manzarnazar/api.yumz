@@ -98,7 +98,7 @@ class CartRepository extends CoreRepository
         $locale   = data_get(Language::languagesList()->where('default', 1)->first(), 'locale');
         $currency = Currency::currenciesList()->where('id', data_get($data, 'currency_id'))->first();
         $cart = Cart::with([
-            'shop:id,location,tax,price,price_per_km,uuid,logo_img,status',
+            'shop:id,location,tax,price,price_per_km,uuid,logo_img,status','fixed_commission',
             'shop.translation' => fn($q) => $q->where(fn($q) => $q->where('locale', $this->language)->orWhere('locale', $locale)),
             'shop.bonus' => fn($q) => $q->where('expired_at', '>', now())->where('status', true),
             'userCarts.cartDetails' => fn($q) => $q->whereNull('parent_id'),

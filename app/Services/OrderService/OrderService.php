@@ -390,9 +390,18 @@ class OrderService extends CoreService implements OrderServiceInterface
 
 		$commissionFee = 0;
 
-		if (!$isSubscribe && $shop?->percentage > 0) {
-			$commissionFee = max(($totalPrice / 100 * $shop?->percentage), 0);
+		if (!$isSubscribe) {
+			if ($shop?->percentage > 0) {
+				$commissionFee = max(($totalPrice / 100 * $shop?->percentage), 0);
+			} else {
+				$commissionFee = $shop?->fixed_commission ?? 0;
+			}
 		}
+	
+
+		// if (!$isSubscribe && $shop?->percentage > 0) {
+		// 	$commissionFee = max(($totalPrice / 100 * $shop?->percentage), 0);
+		// }
 
 		$status = $order->status;
 
