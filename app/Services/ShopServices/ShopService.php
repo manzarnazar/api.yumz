@@ -213,7 +213,7 @@ class ShopService extends CoreService implements ShopServiceInterface
             'phone'          => data_get($data, 'phone'),
             'order_payment'  => data_get($data, 'order_payment', Shop::ORDER_PAYMENT_BEFORE),
             'new_order_after_payment'  => data_get($data, 'new_order_after_payment', 0),
-            'open' => data_get($data, 'open') ? 1 : 0,
+            'open' => data_get($data, 'open') == 'true'? 1 : 0,
             'delivery_time'  => $deliveryTime,
             'show_type'      => data_get($data, 'show_type', $shop?->show_type ?? 1),
             'visibility'     => !!$shop?->visibility,
