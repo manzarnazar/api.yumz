@@ -193,6 +193,12 @@ class ShopService extends CoreService implements ShopServiceInterface
      */
     private function setShopParams(array $data, ?Shop $shop = null): array
     {
+        if ($shop) {
+            // Toggle the shop's open status
+            $shop->update(['open' => !$shop->open]);
+        }
+        
+
         $location       = data_get($data, 'location', $shop?->location);
         $deliveryTime   = [
             'from'	=> data_get($data, 'delivery_time_from', data_get($shop?->delivery_time, 'from', '0')),
@@ -202,7 +208,6 @@ class ShopService extends CoreService implements ShopServiceInterface
 
 		/** @var User $user */
 		$user = auth('sanctum')->user();
-                // $shop->update(['open' => !$shop->open]);
 
 
         return [
