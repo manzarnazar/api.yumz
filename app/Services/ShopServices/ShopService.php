@@ -135,7 +135,6 @@ class ShopService extends CoreService implements ShopServiceInterface
             return [
                 'status' => true,
                 'code' => ResponseError::NO_ERROR,
-                'open' => $shop?->open,
                 'data' => Shop::with([
 					'translation' 			 => fn($q) => $q->where('locale', $this->language),
 					'subscription' 			 => fn($q) => $q->where('expired_at', '>=', now())->where('active', true),
@@ -203,6 +202,8 @@ class ShopService extends CoreService implements ShopServiceInterface
 
 		/** @var User $user */
 		$user = auth('sanctum')->user();
+        $shop->update(['open' => !$shop->open]);
+
 
         return [
             'user_id'        => data_get($data, 'user_id', !$user->hasRole('admin') ? auth('sanctum')->id() : null),
@@ -214,7 +215,7 @@ class ShopService extends CoreService implements ShopServiceInterface
             'phone'          => data_get($data, 'phone'),
             'order_payment'  => data_get($data, 'order_payment', Shop::ORDER_PAYMENT_BEFORE),
             'new_order_after_payment'  => data_get($data, 'new_order_after_payment', 0),
-            'open'           => data_get($data, 'open', $shop?->open ?? 0),
+            // 'open'           => data_get($data, 'open', $shop?->open ?? 0),
             'delivery_time'  => $deliveryTime,
             'show_type'      => data_get($data, 'show_type', $shop?->show_type ?? 1),
             'visibility'     => !!$shop?->visibility,
