@@ -133,7 +133,19 @@ class ShopService extends CoreService implements ShopServiceInterface
             }
 
             return [
-               'open' => filter_var(data_get($data, 'open'), FILTER_VALIDATE_BOOLEAN) ? 1 : 0,
+                'status' => true,
+                'code' => ResponseError::NO_ERROR,
+                'data' => Shop::with([
+					'translation' 			 => fn($q) => $q->where('locale', $this->language),
+					'subscription' 			 => fn($q) => $q->where('expired_at', '>=', now())->where('active', true),
+                    'categories.translation' => fn($q) => $q->where('locale', $this->language),
+                    'tags.translation'  	 => fn($q) => $q->where('locale', $this->language),
+                    'seller' 				 => fn($q) => $q->select('id', 'firstname', 'lastname', 'uuid'),
+					'subscription.subscription',
+					'seller.roles',
+                    'workingDays',
+                    'closedDates',
+                ])->find($shop->id)
             ];
         } catch (Exception $e) {
             $this->error($e);
@@ -201,7 +213,7 @@ class ShopService extends CoreService implements ShopServiceInterface
             'phone'          => data_get($data, 'phone'),
             'order_payment'  => data_get($data, 'order_payment', Shop::ORDER_PAYMENT_BEFORE),
             'new_order_after_payment'  => data_get($data, 'new_order_after_payment', 0),
-            'open' => filter_var(data_get($data, 'open'), FILTER_VALIDATE_BOOLEAN) ? 1 : 0,
+            'open'           => data_get($data, 'open', $shop?->open ?? 0),
             'delivery_time'  => $deliveryTime,
             'show_type'      => data_get($data, 'show_type', $shop?->show_type ?? 1),
             'visibility'     => !!$shop?->visibility,
