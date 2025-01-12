@@ -121,11 +121,26 @@ class DeliveryZoneController extends RestBaseController
 	// }
 
 	public function checkDistance(CheckDistanceRequest $request): JsonResponse
-{
-    // Return only the address data from the request
+{ 
+	$address = $request->input('test');
+
+    // Split the address by commas to get each part
+    $addressParts = explode(',', $address);
+
+    // Trim spaces from each part and check if the third-last part is a 4-digit zipcode
+    $zipcode = trim($addressParts[count($addressParts) - 3]);
+
+    // Check if the zipcode is valid (4 digits)
+    if (preg_match('/^\d{4}$/', $zipcode)) {
+        return response()->json([
+            'zipcode' => $zipcode,
+        ]);
+    }
+
+    // If no valid zipcode was found, return an error response
     return response()->json([
-        'address' => $request->input('test'),
-    ]);
+        'error' => 'No valid zipcode found.',
+    ], 400);
 }
 
 	/**
