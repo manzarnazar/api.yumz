@@ -88,56 +88,36 @@ class DeliveryZoneController extends RestBaseController
 	 */
 	public function checkDistance(CheckDistanceRequest $request): JsonResponse
 	{
+		$shops = Shop::with('deliveryZone:id,shop_id,address')
+			->where([
+				['open', 1],
+				['status', 'approved'],
+			])
+			->whereHas('deliveryZone')
+			->select(['id', 'open', 'status'])
+			->get();
 
-		$zipcode = $request->input('zipcode'); // Get the zipcode from the request
+		foreach ($shops as $shop) {
 
-		// Check if the zipcode exists in the shop_delivery_zipcodes table
-		// Check if the zipcode exists in the shop_delivery_zipcodes table using Query Builder
-		$zipcodeExists = \DB::table('shop_delivery_zipcodes')
-		->where('zip_code', $zipcode)
-		->exists();
+			/** @var Shop $shop */
+			$deliveryZone = $shop->deliveryZone;
 
+			if (!is_array($deliveryZone?->address) || count($deliveryZone?->address ?? []) === 0) {
+				continue;
+			}
 
-		if (!$zipcodeExists) {
-			return $this->onErrorResponse([
-				'code'    => ResponseError::ERROR_400,
-				'message' => __('errors.zipcode_not_found', locale: $this->language)
-			]);
+			$check = Utility::pointInPolygon($request->input('address'), $shop->deliveryZone->address);
+
+			if ($check) {
+				return $this->successResponse('success', 'success');
+			}
+
 		}
 
-		
-		// $shops = Shop::with('deliveryZone:id,shop_id,address')
-		// 	->where([
-		// 		['open', 1],
-		// 		['status', 'approved'],
-		// 	])
-		// 	->whereHas('deliveryZone')
-		// 	->select(['id', 'open', 'status'])
-		// 	->get();
-
-		// foreach ($shops as $shop) {
-
-		// 	/** @var Shop $shop */
-		// 	$deliveryZone = $shop->deliveryZone;
-
-		// 	if (!is_array($deliveryZone?->address) || count($deliveryZone?->address ?? []) === 0) {
-		// 		continue;
-		// 	}
-
-		// 	$check = Utility::pointInPolygon($request->input('address'), $shop->deliveryZone->address);
-
-			// if ($check) {
-			else{
-				return $this->successResponse('success', $zipcode);
-			}
-			// }
-
-		// }
-
-		// return $this->onErrorResponse([
-		// 	'code'    => ResponseError::ERROR_400,
-		// 	'message' => __('errors.' . ResponseError::ERROR_400, locale: $this->language)
-		// ]);
+		return $this->onErrorResponse([
+			'code'    => ResponseError::ERROR_400,
+			'message' => __('errors.' . ResponseError::ERROR_400, locale: $this->language)
+		]);
 	}
 
 	/**
