@@ -94,7 +94,7 @@ class DeliveryZoneController extends RestBaseController
 		// Check if the zipcode exists in the shop_delivery_zipcodes table
 		// Check if the zipcode exists in the shop_delivery_zipcodes table using Query Builder
 		$zipcodeExists = \DB::table('shop_delivery_zipcodes')
-		->where('zip_code', $zipcode)
+		->where('zip_code', "2750")
 		->exists();
 
 
