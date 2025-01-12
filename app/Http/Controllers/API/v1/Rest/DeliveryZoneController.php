@@ -131,16 +131,16 @@ class DeliveryZoneController extends RestBaseController
     $zipcode = trim($addressParts[count($addressParts) - 3]);
 
     // Check if the zipcode is valid (4 digits)
-    if (preg_match('/^\d{4}$/', $zipcode)) {
+    // if (preg_match('/^\d{4}$/', $zipcode)) {
         return response()->json([
-            'zipcode' => $zipcode,
+            'zipcode' => $zipcode[0],
         ]);
-    }
+    // }
 
     // If no valid zipcode was found, return an error response
-    return response()->json([
-        'error' => 'No valid zipcode found.',
-    ], 400);
+    // return response()->json([
+    //     'error' => 'No valid zipcode found.',
+    // ], 400);
 }
 
 	/**
