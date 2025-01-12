@@ -101,7 +101,7 @@ class DeliveryZoneController extends RestBaseController
 		if (!$zipcodeExists) {
 			return $this->onErrorResponse([
 				'code'    => ResponseError::ERROR_400,
-				'message' => __('errors.zipcode_not_found', locale: $this->language)
+				'message' => __(`errors.zipcode_not_found $zipcode`, locale: $this->language)
 			]);
 		}
 
