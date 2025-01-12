@@ -91,20 +91,23 @@ class DeliveryZoneController extends RestBaseController
 	{
 
 		$zipcode = $request->input('zipcode');
+					return $this->successResponse($zipcode, 'success');
 
-		// Check if the zipcode exists in the shop_delivery_zipcode table for any shop
-		$zipcodeExists = DB::table('shop_delivery_zipcode')
-			->where('zip_code', $zipcode)
-			->exists();
+
+
+		// // Check if the zipcode exists in the shop_delivery_zipcode table for any shop
+		// $zipcodeExists = DB::table('shop_delivery_zipcode')
+		// 	->where('zip_code', $zipcode)
+		// 	->exists();
 		
-		if ($zipcodeExists) {
-			return $this->successResponse('success', 'success');
-		}
+		// if ($zipcodeExists) {
+		// 	return $this->successResponse('success', 'success');
+		// }
 	
-		return $this->onErrorResponse([
-			'code'    => ResponseError::ERROR_400,
-			'message' => __('errors.' . ResponseError::ERROR_400, locale: $this->language)
-		]);
+		// return $this->onErrorResponse([
+		// 	'code'    => ResponseError::ERROR_400,
+		// 	'message' => __('errors.' . ResponseError::ERROR_400, locale: $this->language)
+		// ]);
 	
 		
 		// $shops = Shop::with('deliveryZone:id,shop_id,address')
