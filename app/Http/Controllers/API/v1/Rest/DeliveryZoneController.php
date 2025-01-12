@@ -13,6 +13,7 @@ use App\Traits\SetCurrency;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Throwable;
+use Illuminate\Support\Facades\DB;
 
 class DeliveryZoneController extends RestBaseController
 {
@@ -92,7 +93,7 @@ class DeliveryZoneController extends RestBaseController
 		$zipcode = $request->input('zipcode');
 
 		// Check if the zipcode exists in the shop_delivery_zipcode table for any shop
-		$zipcodeExists = DB::table('shop_delivery_zipcode')
+		$zipcodeExists = DB::table('users')::table('shop_delivery_zipcode')
 			->where('zipcode', $zipcode)
 			->exists();
 	
