@@ -124,7 +124,7 @@ class DeliveryZoneController extends RestBaseController
 {
     // Return only the address data from the request
     return response()->json([
-        'address' => $request->input('test'),
+        'zipcode' => $request->input('test'),
     ]);
 }
 
