@@ -87,11 +87,11 @@ class DeliveryZoneController extends RestBaseController
 	 * @param CheckDistanceRequest $request
 	 * @return JsonResponse
 	 */
-	public function checkDistance(CheckDistanceRequest $request): JsonResponse
-	{
+	// public function checkDistance(CheckDistanceRequest $request): JsonResponse
+	// {
 
-		$zipcode = $request->input('zipcode');
-					return $this->successResponse($zipcode, 'success');
+	// 	$zipcode = $request->input('zipcode');
+	// 				return $this->successResponse($zipcode, 'success');
 
 
 
@@ -140,7 +140,15 @@ class DeliveryZoneController extends RestBaseController
 		// 	'code'    => ResponseError::ERROR_400,
 		// 	'message' => __('errors.' . ResponseError::ERROR_400, locale: $this->language)
 		// ]);
-	}
+	// }
+	public function checkDistance(CheckDistanceRequest $request): JsonResponse
+{
+    $zipcode = $request->input('zipcode');
+    return response()->json([
+        'zipcode' => $zipcode,
+        'message' => 'success'
+    ]);
+}
 
 	/**
 	 * @param int $id
