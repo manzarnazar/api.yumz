@@ -13,7 +13,6 @@ use App\Traits\SetCurrency;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Throwable;
-use Illuminate\Support\Facades\DB;
 
 class DeliveryZoneController extends RestBaseController
 {
@@ -89,64 +88,43 @@ class DeliveryZoneController extends RestBaseController
 	 */
 	// public function checkDistance(CheckDistanceRequest $request): JsonResponse
 	// {
+	// 	$shops = Shop::with('deliveryZone:id,shop_id,address')
+	// 		->where([
+	// 			['open', 1],
+	// 			['status', 'approved'],
+	// 		])
+	// 		->whereHas('deliveryZone')
+	// 		->select(['id', 'open', 'status'])
+	// 		->get();
 
-	// 	$zipcode = $request->input('zipcode');
-	// 				return $this->successResponse($zipcode, 'success');
+	// 	foreach ($shops as $shop) {
 
+	// 		/** @var Shop $shop */
+	// 		$deliveryZone = $shop->deliveryZone;
 
+	// 		if (!is_array($deliveryZone?->address) || count($deliveryZone?->address ?? []) === 0) {
+	// 			continue;
+	// 		}
 
-		// // Check if the zipcode exists in the shop_delivery_zipcode table for any shop
-		// $zipcodeExists = DB::table('shop_delivery_zipcode')
-		// 	->where('zip_code', $zipcode)
-		// 	->exists();
-		
-		// if ($zipcodeExists) {
-		// 	return $this->successResponse('success', 'success');
-		// }
-	
-		// return $this->onErrorResponse([
-		// 	'code'    => ResponseError::ERROR_400,
-		// 	'message' => __('errors.' . ResponseError::ERROR_400, locale: $this->language)
-		// ]);
-	
-		
-		// $shops = Shop::with('deliveryZone:id,shop_id,address')
-		// 	->where([
-		// 		['open', 1],
-		// 		['status', 'approved'],
-		// 	])
-		// 	->whereHas('deliveryZone')
-		// 	->select(['id', 'open', 'status'])
-		// 	->get();
+	// 		$check = Utility::pointInPolygon($request->input('address'), $shop->deliveryZone->address);
 
-		// foreach ($shops as $shop) {
+	// 		if ($check) {
+	// 			return $this->successResponse('success', 'success');
+	// 		}
 
-		// 	/** @var Shop $shop */
-		// 	$deliveryZone = $shop->deliveryZone;
+	// 	}
 
-		// 	if (!is_array($deliveryZone?->address) || count($deliveryZone?->address ?? []) === 0) {
-		// 		continue;
-		// 	}
-
-		// 	$check = Utility::pointInPolygon($request->input('address'), $shop->deliveryZone->address);
-
-		// 	if ($check) {
-		// 		return $this->successResponse('success', 'success');
-		// 	}
-
-		// }
-
-		// return $this->onErrorResponse([
-		// 	'code'    => ResponseError::ERROR_400,
-		// 	'message' => __('errors.' . ResponseError::ERROR_400, locale: $this->language)
-		// ]);
+	// 	return $this->onErrorResponse([
+	// 		'code'    => ResponseError::ERROR_400,
+	// 		'message' => __('errors.' . ResponseError::ERROR_400, locale: $this->language)
+	// 	]);
 	// }
+
 	public function checkDistance(CheckDistanceRequest $request): JsonResponse
 {
-    $zipcode = $request->input('zipcode');
+    // Return only the address data from the request
     return response()->json([
-        'zipcode' => $zipcode,
-        'message' => 'success'
+        'address' => $request->input('address'),
     ]);
 }
 
