@@ -133,7 +133,7 @@ class DeliveryZoneController extends RestBaseController
     // Check if the zipcode is valid (4 digits)
     // if (preg_match('/^\d{4}$/', $zipcode)) {
         return response()->json([
-            'zipcode' => $zipcode[0],
+            'zipcode' => $zipcode,
         ]);
     // }
 
