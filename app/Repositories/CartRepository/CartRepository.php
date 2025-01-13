@@ -223,11 +223,25 @@ class CartRepository extends CoreRepository
 		$deliveryFee  = 0;
 
 		if (data_get($data, 'type') === Order::DELIVERY) {
-			$helper      = new Utility;
-			$km          = $helper->getDistance($cart->shop->location, data_get($data, 'address'));
-
-			$deliveryFee = $helper->getPriceByDistance($km, $cart->shop, (float)data_get($data, 'rate', 1));
-		}
+            $helper = new Utility;
+        
+            // Fetch shop_delivery_zipcode matching the provided zipcode
+            $zipcode = data_get($data, 'zipcode');
+            $deliveryData = \DB::table('shop_delivery_zipcodes')
+                ->where('zip_code', $zipcode)
+                ->where('shop_id', $cart->shop_id)
+                ->first();
+        
+            if ($deliveryData) {
+                // Set delivery fee from the matched delivery_price
+                $deliveryFee = $deliveryData->delivery_price ?? 0;
+            } else {
+                // Calculate delivery fee if no matching zipcode
+                $km = $helper->getDistance($cart->shop->location, data_get($data, 'address'));
+                $deliveryFee = $helper->getPriceByDistance($km, $cart->shop, (float)data_get($data, 'rate', 1));
+            }
+        }
+        
 
 		$totalPrice  -= $discount;
 

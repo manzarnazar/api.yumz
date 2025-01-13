@@ -21,6 +21,8 @@ class CalculateRequest extends BaseRequest
             'address'           => request('type') === Order::DELIVERY ? 'array|required' : 'array',
             'address.latitude'  => request('type') === Order::DELIVERY ? 'numeric|required' : 'numeric',
             'address.longitude' => request('type') === Order::DELIVERY ? 'numeric|required' : 'numeric',
+            'zipcode'           => 'nullable|string',
+
         ];
     }
 }
