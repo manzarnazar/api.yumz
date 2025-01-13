@@ -222,7 +222,10 @@ class CartRepository extends CoreRepository
 		$totalPrice   = $cart->rate_total_price + $discount;
 		$deliveryFee  = 0;
         $zipcode = data_get($data, 'zipcode');
-
+        $deliveryPrice = DB::table('shop_delivery_zipcodes')
+        ->where('zip_code', $zipcode)
+        ->value('delivery_price');
+    
 		if (data_get($data, 'zipcode')) {
             $zipcode = data_get($data, 'zipcode');
         
@@ -284,7 +287,7 @@ class CartRepository extends CoreRepository
                 'total_price'       => $totalPrice,
                 'total_discount'    => $discount,
                 'delivery_fee'      => $deliveryFee,
-                'zipcode'           => $zipcode,
+                'zipcode'           => $deliveryPrice,
                 'service_fee'       => $serviceFee,
                 'tips'              => $tips,
                 'rate'              => $rate,
