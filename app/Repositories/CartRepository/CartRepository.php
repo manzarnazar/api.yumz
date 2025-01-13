@@ -222,6 +222,8 @@ class CartRepository extends CoreRepository
 		$totalPrice   = $cart->rate_total_price + $discount;
 		$deliveryFee  = 0;
 
+        $zipcode = data_get($data, 'zipcode');
+
 		if (data_get($data, 'type') === Order::DELIVERY) {
 			$helper      = new Utility;
 			$km          = $helper->getDistance($cart->shop->location, data_get($data, 'address'));
@@ -267,7 +269,7 @@ class CartRepository extends CoreRepository
                 'total_shop_tax'    => $shopTax,
                 'total_price'       => $totalPrice,
                 'total_discount'    => $discount,
-                'delivery_fee'      => $deliveryFee,
+                'delivery_fee'      => $zipcode,
                 'service_fee'       => $serviceFee,
                 'tips'              => $tips,
                 'rate'              => $rate,
