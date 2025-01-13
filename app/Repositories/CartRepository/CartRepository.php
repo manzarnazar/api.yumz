@@ -93,210 +93,107 @@ class CartRepository extends CoreRepository
      * @return array
      */
     public function calculateByCartId(int $id, array $data): array
-    {
-        /** @var Cart $cart */
-        $locale   = data_get(Language::languagesList()->where('default', 1)->first(), 'locale');
-        $currency = Currency::currenciesList()->where('id', data_get($data, 'currency_id'))->first();
-        $cart = Cart::with([
-            'shop:id,location,tax,price,price_per_km,uuid,logo_img,status',
-            'shop.translation' => fn($q) => $q->where(fn($q) => $q->where('locale', $this->language)->orWhere('locale', $locale)),
-            'shop.bonus' => fn($q) => $q->where('expired_at', '>', now())->where('status', true),
-            'userCarts.cartDetails' => fn($q) => $q->whereNull('parent_id'),
-            'userCarts.cartDetails.stock.countable.unit.translation' => fn($q) => $q
-                ->where(fn($q) => $q->where('locale', $this->language)->orWhere('locale', $locale)),
-            'userCarts.cartDetails.stock.countable.translation' => fn($q) => $q
-               ->where(fn($q) => $q->where('locale', $this->language)->orWhere('locale', $locale)),
-            'userCarts.cartDetails.stock.bonus' => fn($q) => $q->where('expired_at', '>', now())->where('status', true),
-            'userCarts.cartDetails.stock.countable.discounts' => fn($q) => $q->where('start', '<=', today())
-                ->where('end', '>=', today())
-                ->where('active', 1),
-            'userCarts.cartDetails.stock.stockExtras.group.translation' => fn($q) => $q
-               ->where(fn($q) => $q->where('locale', $this->language)->orWhere('locale', $locale)),
+{
+    $locale   = data_get(Language::languagesList()->where('default', 1)->first(), 'locale');
+    $currency = Currency::currenciesList()->where('id', data_get($data, 'currency_id'))->first();
 
-            'userCarts.cartDetails.children.stock.countable.unit.translation' => fn($q) => $q
-                ->where(fn($q) => $q->where('locale', $this->language)->orWhere('locale', $locale)),
-            'userCarts.cartDetails.children.stock.countable.translation' => fn($q) => $q
-               ->where(fn($q) => $q->where('locale', $this->language)->orWhere('locale', $locale)),
-            'userCarts.cartDetails.children.stock.stockExtras.group.translation' => fn($q) => $q
-               ->where(fn($q) => $q->where('locale', $this->language)->orWhere('locale', $locale)),
-        ])
-            ->withCount('userCarts')
-            ->find($id);
+    /** @var Cart $cart */
+    $cart = Cart::with([
+        'shop:id,location,tax,price,price_per_km,uuid,logo_img,status',
+        'shop.translation' => fn($q) => $q->where(fn($q) => $q->where('locale', $this->language)->orWhere('locale', $locale)),
+        'shop.bonus' => fn($q) => $q->where('expired_at', '>', now())->where('status', true),
+        'userCarts.cartDetails.stock.countable.unit.translation' => fn($q) => $q
+            ->where(fn($q) => $q->where('locale', $this->language)->orWhere('locale', $locale)),
+        'userCarts.cartDetails.stock.countable.translation' => fn($q) => $q
+           ->where(fn($q) => $q->where('locale', $this->language)->orWhere('locale', $locale)),
+        'userCarts.cartDetails.stock.bonus' => fn($q) => $q->where('expired_at', '>', now())->where('status', true),
+        'userCarts.cartDetails.stock.countable.discounts' => fn($q) => $q->where('start', '<=', today())
+            ->where('end', '>=', today())
+            ->where('active', 1),
+    ])->withCount('userCarts')->find($id);
 
-        if (empty($cart)) {
-
-            return ['status' => false, 'code' => ResponseError::ERROR_404];
-
-        } else if (empty($cart->shop?->id)) {
-
-            $cart->delete();
-
-            return ['status' => false, 'code' => ResponseError::ERROR_404];
-        } else if ($cart->user_carts_count === 0) {
-
-            return ['status' => false, 'code' => ResponseError::ERROR_400, 'message' => 'Cart is empty'];
-
-        }
-
-        if (!empty($currency)) {
-            $cart->update([
-                'currency_id' => $currency->id,
-                'rate'        => $currency->rate
-            ]);
-        }
-
-		$checkPhoneIfRequired = $this->checkPhoneIfRequired($data);
-
-		if (!data_get($checkPhoneIfRequired, 'status')) {
-			return $checkPhoneIfRequired;
-		}
-
-        $totalTax     = 0;
-        $price        = 0;
-//        $receiptPrice = 0;
-        $discount     = 0;
-        $cartDetails  = data_get(data_get($cart->userCarts, '*.cartDetails', []), 0, []);
-        $inReceipts   = [];
-
-        foreach ($cart->userCarts as $userCart) {
-
-//            if ($userCart?->cartDetails?->count() === 0) {
-//                $userCart->delete();
-//                continue;
-//            }
-
-            foreach ($userCart->cartDetails as $cartDetail) {
-
-                if (empty($cartDetail->stock) || $cartDetail->quantity === 0) {
-
-                    $cartDetail->children()->delete();
-                    $cartDetail->delete();
-                    continue;
-                }
-
-                /** @var CartDetail $cartDetail */
-                $totalTax += $cartDetail->stock->rate_tax_price;
-                $price    += $cartDetail->rate_price;
-                $discount += $cartDetail->rate_discount;
-
-                if (!$cartDetail->bonus) {
-
-                    if (isset($inReceipts[$cartDetail->stock_id])) {
-                        $inReceipts[$cartDetail->stock_id] += $cartDetail->quantity;
-                    } else {
-                        $inReceipts[$cartDetail->stock_id] = $cartDetail->quantity;
-                    }
-
-//                    $receiptPrice += $cartDetail->price;
-                }
-
-                foreach ($cartDetail->children as $child) {
-
-                    if (!$child->bonus) {
-
-//                        $receiptPrice += !isset($inReceipts[$child->stock_id]) ? $child->price : 0;
-
-                        if (isset($inReceipts[$child->stock_id])) {
-                            $inReceipts[$child->stock_id] += $child->quantity;
-                        } else {
-                            $inReceipts[$child->stock_id] = $child->quantity;
-                        }
-
-                    }
-
-                    $totalTax += $child->stock->rate_tax_price;
-                    $price    += $child->rate_price;
-                    $discount += $child->rate_discount;
-                }
-
-            }
-
-        }
-
-        $rate = $currency?->rate ?? $cart->rate;
-
-        // recalculate shop bonus
-        $receiptDiscount = (new CartService)->recalculateReceipt($cart, $inReceipts) * $rate;
-
-		$discount    += $receiptDiscount;
-		$totalPrice   = $cart->rate_total_price + $discount;
-		$deliveryFee  = 0;
-        $zipcode = data_get($data, 'zipcode');
-        $deliveryPrice = DB::table('shop_delivery_zipcodes')
-        ->where('zip_code', $zipcode)
-        ->value('delivery_price');
-    
-		if (data_get($data, 'zipcode')) {
-            $zipcode = data_get($data, 'zipcode');
-        
-            // Fetch delivery price for the given zipcode
-            $deliveryZipcode = DB::table('shop_delivery_zipcodes')
-                ->where('zip_code', $zipcode)
-                ->where('shop_id', $cart->shop->id)
-                ->first();
-        
-            if ($deliveryZipcode) {
-                $deliveryFee = (float) $deliveryZipcode->delivery_price; // Parse to double
-            } else {
-                $deliveryFee = 0; // Default value if no match is found
-            }
-        } else if (data_get($data, 'type') === Order::DELIVERY) {
-            $helper      = new Utility;
-            $km          = $helper->getDistance($cart->shop->location, data_get($data, 'address'));
-        
-            $deliveryFee = $helper->getPriceByDistance($km, $cart->shop, (float)data_get($data, 'rate', 1));
-        }
-        
-
-		$totalPrice  -= $discount;
-
-        $shopTax     = max((($totalPrice) / $rate) / 100 * $cart->shop->tax, 0) * $rate;
-        $serviceFee  = (double)Settings::where('key', 'service_fee')->first()?->value ?: 0;
-        $serviceFee  *= $rate;
-
-        $coupon = Coupon::checkCoupon(data_get($data, 'coupon'), $cart->shop_id)->first();
-
-        $couponPrice = 0;
-
-		if ($coupon?->for === 'delivery_fee') {
-
-			$couponPrice = $this->checkCoupon($coupon, $deliveryFee);
-
-			$deliveryFee -= $couponPrice;
-
-		} else if ($coupon?->for === 'total_price') {
-
-			$couponPrice = $this->checkCoupon($coupon, $cart->total_price);
-
-			$totalPrice -= $couponPrice;
-
-		}
-
-		$tips = data_get($data, 'tips', 0);
-
-		$totalPrice = max($totalPrice + $deliveryFee + $shopTax + $serviceFee + $tips, 0);
-
-        return [
-            'status' => true,
-            'code'   => ResponseError::NO_ERROR,
-            'data'   => [
-                'products'          => CartDetailResource::collection($cartDetails),
-                'total_tax'         => $shopTax,
-                'price'             => $price,
-                'total_shop_tax'    => $shopTax,
-                'total_price'       => $totalPrice,
-                'total_discount'    => $discount,
-                'delivery_fee'      => $deliveryFee,
-                'zipcode'           => $deliveryPrice,
-                'service_fee'       => $serviceFee,
-                'tips'              => $tips,
-                'rate'              => $rate,
-                'coupon_price'      => $couponPrice,
-                'receipt_discount'  => $receiptDiscount,
-                'receipt_count'     => request('receipt_count'),
-            ],
-        ];
+    if (!$cart || !$cart->shop?->id || $cart->user_carts_count === 0) {
+        return ['status' => false, 'code' => ResponseError::ERROR_404];
     }
+
+    if ($currency) {
+        $cart->update(['currency_id' => $currency->id, 'rate' => $currency->rate]);
+    }
+
+    $checkPhone = $this->checkPhoneIfRequired($data);
+    if (!data_get($checkPhone, 'status')) {
+        return $checkPhone;
+    }
+
+    $totalTax = $price = $discount = $deliveryFee = 0;
+    $cartDetails = $cart->userCarts->flatMap(fn($userCart) => $userCart->cartDetails);
+
+    foreach ($cartDetails as $cartDetail) {
+        if ($cartDetail->quantity === 0 || !$cartDetail->stock) {
+            $cartDetail->children()->delete();
+            $cartDetail->delete();
+            continue;
+        }
+
+        $totalTax += $cartDetail->stock->rate_tax_price;
+        $price += $cartDetail->rate_price;
+        $discount += $cartDetail->rate_discount;
+
+        foreach ($cartDetail->children as $child) {
+            $totalTax += $child->stock->rate_tax_price;
+            $price += $child->rate_price;
+            $discount += $child->rate_discount;
+        }
+    }
+
+    $rate = $currency?->rate ?? $cart->rate;
+
+    // Delivery Fee Calculation
+    if ($zipcode = data_get($data, 'zipcode')) {
+        $deliveryFee = DB::table('shop_delivery_zipcodes')
+            ->where('zip_code', $zipcode)
+            ->where('shop_id', $cart->shop->id)
+            ->value('delivery_price') ?? 0;
+    } elseif (data_get($data, 'type') === Order::DELIVERY) {
+        $km = (new Utility)->getDistance($cart->shop->location, data_get($data, 'address'));
+        $deliveryFee = (new Utility)->getPriceByDistance($km, $cart->shop, (float)data_get($data, 'rate', 1));
+    }
+
+    // Coupon Application
+    $coupon = Coupon::checkCoupon(data_get($data, 'coupon'), $cart->shop_id)->first();
+    $couponPrice = 0;
+
+    if ($coupon) {
+        $couponPrice = $this->checkCoupon($coupon, $coupon->for === 'delivery_fee' ? $deliveryFee : $cart->total_price);
+        if ($coupon->for === 'delivery_fee') {
+            $deliveryFee -= $couponPrice;
+        } else {
+            $price -= $couponPrice;
+        }
+    }
+
+    $tips = (float)data_get($data, 'tips', 0);
+
+    // Final Price Calculation
+    $totalPrice = max($price + $deliveryFee + $totalTax + $tips, 0);
+
+    return [
+        'status' => true,
+        'code'   => ResponseError::NO_ERROR,
+        'data'   => [
+            'products' => CartDetailResource::collection($cartDetails),
+            'total_tax' => $totalTax,
+            'price' => $price,
+            'total_price' => $totalPrice,
+            'total_discount' => $discount,
+            'delivery_fee' => $deliveryFee,
+            'service_fee' => $rate * ((double)Settings::where('key', 'service_fee')->first()?->value ?: 0),
+            'tips' => $tips,
+            'rate' => $rate,
+            'coupon_price' => $couponPrice,
+        ],
+    ];
+}
 
 	private function checkPhoneIfRequired(array $data): array
 	{
