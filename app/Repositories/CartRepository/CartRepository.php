@@ -269,6 +269,7 @@ class CartRepository extends CoreRepository
                 'total_price'       => $totalPrice,
                 'total_discount'    => $discount,
                 'delivery_fee'      => $deliveryFee,
+                'zipcode'           => $zipcode,
                 'service_fee'       => $serviceFee,
                 'tips'              => $tips,
                 'rate'              => $rate,
