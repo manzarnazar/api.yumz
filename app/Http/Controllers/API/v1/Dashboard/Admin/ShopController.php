@@ -141,35 +141,46 @@ class ShopController extends AdminBaseController
     public function update(StoreRequest $request, string $uuid): JsonResponse
     {
         $locations = $request->input('locations', []); // Default to an empty array if locations is not provided
-
-    // Log the locations to see its structure
-    \Log::debug('Received locations: ', ['locations' => $locations]);
-
-    // If locations is a string (e.g., JSON), decode it to an array
-    if (is_string($locations)) {
-        $locations = json_decode($locations, true); // Decode string to an array
-    }
-
-    // Check again after decoding
-    \Log::debug('Decoded locations: ', ['locations' => $locations]);
-
-    // Insert all locations
-    foreach ($locations as $location) {
-        \DB::table('shop_delivery_zipcodes')->insert([
-            'zip_code' => $location['zip_code'],
-            'delivery_price' => $location['delivery_price'],
-            'city' => $location['city'],
-            'shop_id' => 508,  // Assuming the shop_id is 508
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-    }
-
-    // Return success response with the inserted data
-    return $this->successResponse(
-        __('errors.' . ResponseError::RECORD_WAS_SUCCESSFULLY_UPDATED, locale: $this->language),
-        $locations
-    );
+    
+        // Log the locations to see its structure
+        \Log::debug('Received locations: ', ['locations' => $locations]);
+    
+        // If locations is a string (e.g., JSON), decode it to an array
+        if (is_string($locations)) {
+            $locations = json_decode($locations, true); // Decode string to an array
+        }
+    
+        // Check if locations is an array after decoding
+        if (!is_array($locations)) {
+            \Log::error('Invalid locations format', ['locations' => $locations]);
+            return $this->errorResponse(__('errors.invalid_locations_format'), [], 400);
+        }
+    
+        // Log the decoded locations
+        \Log::debug('Decoded locations: ', ['locations' => $locations]);
+    
+        // Insert all locations
+        foreach ($locations as $location) {
+            // Ensure each location is an array and contains the necessary keys
+            if (is_array($location) && isset($location['zip_code'], $location['delivery_price'], $location['city'])) {
+                \DB::table('shop_delivery_zipcodes')->insert([
+                    'zip_code' => $location['zip_code'],
+                    'delivery_price' => $location['delivery_price'],
+                    'city' => $location['city'],
+                    'shop_id' => 508,  // Assuming the shop_id is 508
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            } else {
+                \Log::error('Invalid location data', ['location' => $location]);
+            }
+        }
+    
+        // Return success response with the inserted data
+        return $this->successResponse(
+            __('errors.' . ResponseError::RECORD_WAS_SUCCESSFULLY_UPDATED, locale: $this->language),
+            $locations
+        );
     }
     
 
