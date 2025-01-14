@@ -145,6 +145,7 @@ class ShopController extends AdminBaseController
     // Log received locations data to check its structure
     \Log::debug('Received locations data: ', ['locations' => $locations]);
 
+    // Loop through each location to handle insertion or update
     foreach ($locations as $location) {
         // Check if a record with the same zip_code, city, and shop_id already exists
         $existingLocation = \DB::table('shop_delivery_zipcodes')
@@ -174,7 +175,7 @@ class ShopController extends AdminBaseController
         }
     }
 
-    // Return success response
+    // Return success response with the updated or inserted data
     return $this->successResponse(
         __('errors.' . ResponseError::RECORD_WAS_SUCCESSFULLY_UPDATED, locale: $this->language),
         $locations
