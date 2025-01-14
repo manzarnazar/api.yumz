@@ -161,9 +161,11 @@ class ShopController extends AdminBaseController
     
         // Insert all locations
         foreach ($locations as $location) {
-            // Ensure each location is an array and contains the necessary keys
             if (is_array($location) && isset($location['zip_code'], $location['delivery_price'], $location['city'])) {
-                \DB::table('shop_delivery_zipcodes')->insert([
+                // Log the data being inserted
+                \Log::debug('Inserting location: ', ['location' => $location]);
+        
+                $inserted = \DB::table('shop_delivery_zipcodes')->insert([
                     'zip_code' => $location['zip_code'],
                     'delivery_price' => $location['delivery_price'],
                     'city' => $location['city'],
@@ -171,10 +173,17 @@ class ShopController extends AdminBaseController
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
+        
+                if ($inserted) {
+                    \Log::debug('Successfully inserted location');
+                } else {
+                    \Log::error('Failed to insert location', ['location' => $location]);
+                }
             } else {
                 \Log::error('Invalid location data', ['location' => $location]);
             }
         }
+        
     
         // Return success response with the inserted data
         return $this->successResponse(
