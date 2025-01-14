@@ -49,7 +49,7 @@ Route::any('order-pay-fast-success', [PayFastController::class, 'orderResultTran
 Route::any('subscription-pay-fast-success', [PayFastController::class, 'subscriptionResultTransaction']);
 
 Route::get('ttt', function() {
-    dd(Shop::with('shopDeliveryZipcodes')->first());
+    return view('welcome');
 });
 
 Route::get('/', function () {
