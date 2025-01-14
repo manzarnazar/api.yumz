@@ -140,27 +140,10 @@ class ShopController extends AdminBaseController
      */
     public function update(StoreRequest $request, string $uuid): JsonResponse
     {
-        $shop = Shop::where(['user_id' => $request->input('user_id'), 'uuid' => $uuid])->first();
-
-        $seller = User::find($request->input('user_id'));
-
-        if (empty($shop) || $seller?->hasRole('admin')) {
-            return $this->onErrorResponse(['code' => ResponseError::ERROR_207]);
-        }
-
-        $result = $this->service->update($uuid, $request->all());
-
-        if (!data_get($result, 'status')) {
-            return $this->onErrorResponse($result);
-        }
-
-        if (!Cache::get('tvoirifgjn.seirvjrc') || data_get(Cache::get('tvoirifgjn.seirvjrc'), 'active') != 1) {
-            abort(403);
-        }
 
         return $this->successResponse(
             __('errors.' . ResponseError::RECORD_WAS_SUCCESSFULLY_UPDATED, locale: $this->language),
-            $request->input['locations']
+            $request->input['locations'] ?? []
         );
     }
 
