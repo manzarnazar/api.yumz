@@ -141,7 +141,31 @@ class ShopController extends AdminBaseController
     public function update(StoreRequest $request, string $uuid): JsonResponse
     {
         $locations = $request->input('locations', []); // Default to an empty array if locations is not provided
+        
+        // Log the raw input to check for duplicates
     
+    
+        // If locations is a string (e.g., JSON), decode it to an array
+        if (is_string($locations)) {
+            $locations = json_decode($locations, true); // Decode outer JSON string to an array
+        }
+    
+        // Decode each location item if it's still a JSON string
+        foreach ($locations as &$location) {
+            if (is_string($location)) {
+                $location = json_decode($location, true); // Decode each item
+            }
+        }
+    
+        // Remove duplicates based on location data
+        $locations = array_map("unserialize", array_unique(array_map("serialize", $locations)));
+    
+        // Check if locations is an array after decoding and removing duplicates
+        if (!is_array($locations)) {
+            \Log::error('Invalid locations format', ['locations' => $locations]);
+            return $this->errorResponse(__('errors.invalid_locations_format'), [], 400);
+        }
+        
         try {
             foreach ($locations as $location) {
                 // Check for duplicates by checking existing zip_code and city
@@ -157,7 +181,6 @@ class ShopController extends AdminBaseController
                
             }
             
-            \DB::commit();
         } catch (\Exception $e) {
             \DB::rollBack();
             \Log::error('Database error: ', ['error' => $e->getMessage()]);
