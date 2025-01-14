@@ -142,46 +142,43 @@ class ShopController extends AdminBaseController
     {
         $locations = $request->input('locations', []); // Default to an empty array if locations is not provided
 
-        // Log received locations data to check its structure
-        \Log::debug('Received locations data: ', ['locations' => $locations]);
-    
-        // Decode the JSON strings if necessary
-        foreach ($locations as &$location) {
-            if (is_string($location)) {
-                // Decode the JSON string to an array
-                $location = json_decode($location, true);
-                // Check if the decoding was successful
-                if (json_last_error() !== JSON_ERROR_NONE) {
-                    return $this->errorResponse(
-                        __('errors.invalid_locations_data', locale: $this->language),
-                        []
-                    );
-                }
-            }
-        }
-    
-        // Insert data into the database
-        foreach ($locations as $location) {
-            if (is_array($location) && isset($location['zip_code'], $location['delivery_price'], $location['city'])) {
-                \DB::table('shop_delivery_zipcodes')->insert([
-                    'zip_code' => $location['zip_code'],
+    // Log received locations data to check its structure
+    \Log::debug('Received locations data: ', ['locations' => $locations]);
+
+    foreach ($locations as $location) {
+        // Check if a record with the same zip_code, city, and shop_id already exists
+        $existingLocation = \DB::table('shop_delivery_zipcodes')
+            ->where('zip_code', $location['zip_code'])
+            ->where('city', $location['city'])
+            ->where('shop_id', 508)  // Assuming the shop_id is 508
+            ->first();
+
+        // If the location already exists, update it
+        if ($existingLocation) {
+            \DB::table('shop_delivery_zipcodes')
+                ->where('id', $existingLocation->id)  // Update the existing record
+                ->update([
                     'delivery_price' => $location['delivery_price'],
-                    'city' => $location['city'],
-                    'shop_id' => 508, // Assuming the shop_id is 508
-                    'created_at' => now(),
                     'updated_at' => now(),
                 ]);
-            } else {
-                // Log invalid data for debugging
-                \Log::error('Invalid location data:', [$location]);
-            }
+        } else {
+            // Otherwise, insert a new record
+            \DB::table('shop_delivery_zipcodes')->insert([
+                'zip_code' => $location['zip_code'],
+                'delivery_price' => $location['delivery_price'],
+                'city' => $location['city'],
+                'shop_id' => 508,  // Assuming the shop_id is 508
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
         }
-    
-        // Return the success response
-        return $this->successResponse(
-            __('errors.' . ResponseError::RECORD_WAS_SUCCESSFULLY_UPDATED, locale: $this->language),
-            $locations
-        );
+    }
+
+    // Return success response
+    return $this->successResponse(
+        __('errors.' . ResponseError::RECORD_WAS_SUCCESSFULLY_UPDATED, locale: $this->language),
+        $locations
+    );
     }
     
 
