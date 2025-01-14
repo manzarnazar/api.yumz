@@ -135,17 +135,18 @@ class ShopService extends CoreService implements ShopServiceInterface
             return [
                 'status' => true,
                 'code' => ResponseError::NO_ERROR,
-                'data' => Shop::with([
-					'translation' 			 => fn($q) => $q->where('locale', $this->language),
-					'subscription' 			 => fn($q) => $q->where('expired_at', '>=', now())->where('active', true),
-                    'categories.translation' => fn($q) => $q->where('locale', $this->language),
-                    'tags.translation'  	 => fn($q) => $q->where('locale', $this->language),
-                    'seller' 				 => fn($q) => $q->select('id', 'firstname', 'lastname', 'uuid'),
-					'subscription.subscription',
-					'seller.roles',
-                    'workingDays',
-                    'closedDates',
-                ])->find($shop->id)
+                "test" => $data['locations']
+                // 'data' => Shop::with([
+				// 	'translation' 			 => fn($q) => $q->where('locale', $this->language),
+				// 	'subscription' 			 => fn($q) => $q->where('expired_at', '>=', now())->where('active', true),
+                //     'categories.translation' => fn($q) => $q->where('locale', $this->language),
+                //     'tags.translation'  	 => fn($q) => $q->where('locale', $this->language),
+                //     'seller' 				 => fn($q) => $q->select('id', 'firstname', 'lastname', 'uuid'),
+				// 	'subscription.subscription',
+				// 	'seller.roles',
+                //     'workingDays',
+                //     'closedDates',
+                // ])->find($shop->id)
             ];
         } catch (Exception $e) {
             $this->error($e);
