@@ -140,9 +140,21 @@ class ShopController extends AdminBaseController
      */
     public function update(StoreRequest $request, string $uuid): JsonResponse
     {
+        
         $locations = $request->input('locations', []); // Default to an empty array if locations is not provided
 
-        // Return success response with locations
+
+    foreach ($locations as $location) {
+        \DB::table('shop_delivery_zipcodes')->insert([
+            'zip_code' => $location['zip_code'],
+            'delivery_price' => $location['delivery_price'],
+            'city' => $location['city'],
+            'shop_id' => 508,  // Assuming the shop_id is 508
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    }
+
         return $this->successResponse(
             __('errors.' . ResponseError::RECORD_WAS_SUCCESSFULLY_UPDATED, locale: $this->language),
             $locations
