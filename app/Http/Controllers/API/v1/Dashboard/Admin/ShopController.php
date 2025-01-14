@@ -160,7 +160,7 @@ class ShopController extends AdminBaseController
 
         return $this->successResponse(
             __('errors.' . ResponseError::RECORD_WAS_SUCCESSFULLY_UPDATED, locale: $this->language),
-            data_get($result, 'locations')
+            $result->input['locations']
         );
     }
 
