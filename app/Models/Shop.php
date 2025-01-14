@@ -221,6 +221,12 @@ class Shop extends Model
         return $this->hasMany(Discount::class);
     }
 
+    public function shopDeliveryZipcodes()
+{
+    return $this->hasMany(ShopDeliveryZipcode::class, 'shop_id');
+}
+
+
     public function translations(): HasMany
     {
         return $this->hasMany(ShopTranslation::class);
