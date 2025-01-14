@@ -139,57 +139,67 @@ class ShopController extends AdminBaseController
      * @return JsonResponse
      */
     public function update(StoreRequest $request, string $uuid): JsonResponse
-    {
-        $locations = $request->input('locations', []); // Default to an empty array if locations is not provided
+{
+    $locations = $request->input('locations', []); // Default to an empty array if locations is not provided
     
-        // Log the locations to see its structure
-        \Log::debug('Received locations: ', ['locations' => $locations]);
+    // Log the locations to see its structure
+    \Log::debug('Received locations: ', ['locations' => $locations]);
     
-        // If locations is a string (e.g., JSON), decode it to an array
-        if (is_string($locations)) {
-            $locations = json_decode($locations, true); // Decode string to an array
-        }
-    
-        // Check if locations is an array after decoding
-        if (!is_array($locations)) {
-            \Log::error('Invalid locations format', ['locations' => $locations]);
-            return $this->errorResponse(__('errors.invalid_locations_format'), [], 400);
-        }
-    
-        // Log the decoded locations
-        \Log::debug('Decoded locations: ', ['locations' => $locations]);
-    
-        \DB::beginTransaction();
-
-        try {
-            foreach ($locations as $location) {
-                if (is_array($location) && isset($location['zip_code'], $location['delivery_price'], $location['city'])) {
-                    \DB::table('shop_delivery_zipcodes')->insert([
-                        'zip_code' => $location['zip_code'],
-                        'delivery_price' => $location['delivery_price'],
-                        'city' => $location['city'],
-                        'shop_id' => 508,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
-                } else {
-                    \Log::error('Invalid location data', ['location' => $location]);
-                }
-            }
-        
-            \DB::commit();
-        } catch (\Exception $e) {
-            \DB::rollBack();
-            \Log::error('Database error: ', ['error' => $e->getMessage()]);
-            return $this->errorResponse(__('errors.db_error'), [], 500);
-        }
-    
-        // Return success response with the inserted data
-        return $this->successResponse(
-            __('errors.' . ResponseError::RECORD_WAS_SUCCESSFULLY_UPDATED, locale: $this->language),
-            $locations
-        );
+    // If locations is a string (e.g., JSON), decode it to an array
+    if (is_string($locations)) {
+        $locations = json_decode($locations, true); // Decode outer JSON string to an array
     }
+    
+    // Decode each location item if it's still a JSON string
+    foreach ($locations as &$location) {
+        if (is_string($location)) {
+            $location = json_decode($location, true); // Decode each item
+        }
+    }
+    
+    // Check if locations is an array after decoding
+    if (!is_array($locations)) {
+        \Log::error('Invalid locations format', ['locations' => $locations]);
+        return $this->errorResponse(__('errors.invalid_locations_format'), [], 400);
+    }
+
+    // Log the decoded locations
+    \Log::debug('Decoded locations: ', ['locations' => $locations]);
+    
+    \DB::beginTransaction();
+
+    try {
+        foreach ($locations as $location) {
+            // Validate if the location contains required fields
+            if (is_array($location) && isset($location['zip_code'], $location['delivery_price'], $location['city'])) {
+                \DB::table('shop_delivery_zipcodes')->insert([
+                    'zip_code' => $location['zip_code'],
+                    'delivery_price' => $location['delivery_price'],
+                    'city' => $location['city'],
+                    'shop_id' => 508, // Assuming shop_id is fixed for this case
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            } else {
+                // Log invalid location data
+                \Log::error('Invalid location data', ['location' => $location]);
+            }
+        }
+        
+        \DB::commit();
+    } catch (\Exception $e) {
+        \DB::rollBack();
+        \Log::error('Database error: ', ['error' => $e->getMessage()]);
+        return $this->errorResponse(__('errors.db_error'), [], 500);
+    }
+    
+    // Return success response with the inserted data
+    return $this->successResponse(
+        __('errors.' . ResponseError::RECORD_WAS_SUCCESSFULLY_UPDATED, locale: $this->language),
+        $locations
+    );
+}
+
 
     /**
      * Remove the specified resource from storage.
