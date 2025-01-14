@@ -140,26 +140,42 @@ class ShopController extends AdminBaseController
      */
     public function update(StoreRequest $request, string $uuid): JsonResponse
     {
+        $locations = $request->input('locations', []); // Default to an empty array if locations is not provided
         
-        $locations = $request->input('locations', []);
-
-
-    foreach ($locations as $location) {
-        \DB::table('shop_delivery_zipcodes')->insert([
-            'zip_code' => $location['zip_code'],
-            'delivery_price' => $location['delivery_price'],
-            'city' => $location['city'],
-            'shop_id' => 508, 
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-    }
-
+        // Log locations data to check its structure
+        \Log::debug('Received locations data: ', ['locations' => $locations]);
+    
+        // Validate if $locations is an array
+        if (!is_array($locations)) {
+            return $this->errorResponse(
+                __('errors.invalid_locations_data', locale: $this->language),
+                []
+            );
+        }
+    
+        // Insert data into the database if the structure is correct
+        foreach ($locations as $location) {
+            if (is_array($location)) {
+                \DB::table('shop_delivery_zipcodes')->insert([
+                    'zip_code' => $location['zip_code'],
+                    'delivery_price' => $location['delivery_price'],
+                    'city' => $location['city'],
+                    'shop_id' => 508, // Assuming the shop_id is 508
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            } else {
+                // Handle invalid structure of location
+                \Log::error('Invalid location structure detected:', [$location]);
+            }
+        }
+    
         return $this->successResponse(
             __('errors.' . ResponseError::RECORD_WAS_SUCCESSFULLY_UPDATED, locale: $this->language),
             $locations
         );
     }
+    
 
     /**
      * Remove the specified resource from storage.
