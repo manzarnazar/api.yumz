@@ -48,9 +48,8 @@ Route::any('subscription-paytabs-success', [PayTabsController::class, 'subscript
 Route::any('order-pay-fast-success', [PayFastController::class, 'orderResultTransaction']);
 Route::any('subscription-pay-fast-success', [PayFastController::class, 'subscriptionResultTransaction']);
 
-Route::get('ttt', function(){
-    return Shop::with('shopDeliveryZipcodes')->first();
-
+Route::get('ttt', function() {
+    dd(Shop::with('shopDeliveryZipcodes')->first());
 });
 
 Route::get('/', function () {
