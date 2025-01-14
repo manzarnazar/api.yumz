@@ -49,7 +49,18 @@ Route::any('order-pay-fast-success', [PayFastController::class, 'orderResultTran
 Route::any('subscription-pay-fast-success', [PayFastController::class, 'subscriptionResultTransaction']);
 
 Route::get('ttt', function() {
-    return view('welcome');
+    // Assuming you want to return the first shop with its delivery zipcodes
+    $shop = Shop::with('shopDeliveryZipcodes')->first();
+
+    // Check if shop exists, and return the data as JSON
+    if ($shop) {
+        return response()->json($shop);
+    } else {
+        return response()->json([
+            'status' => false,
+            'message' => 'Shop not found.',
+        ], 404);
+    }
 });
 
 Route::get('/', function () {
