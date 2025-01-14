@@ -143,17 +143,29 @@ class ShopController extends AdminBaseController
         
         $locations = $request->input('locations', []); // Default to an empty array if locations is not provided
 
-
-    foreach ($locations as $location) {
-        \DB::table('shop_delivery_zipcodes')->insert([
-            'zip_code' => $location['zip_code'],
-            'delivery_price' => $location['delivery_price'],
-            'city' => $location['city'],
-            'shop_id' => 508,  // Assuming the shop_id is 508
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-    }
+        // Debugging: Check the format of the locations
+        \Log::debug('Locations Data:', $locations);
+    
+        // Check if the $locations is an array and has the correct structure
+        if (!is_array($locations) || empty($locations)) {
+            return $this->errorResponse(
+                __('errors.invalid_locations_data', locale: $this->language),
+                []
+            );
+        }
+    
+        // Insert the locations into the 'shop_delivery_zipcodes' table
+        foreach ($locations as $location) {
+            \DB::table('shop_delivery_zipcodes')->insert([
+                'zip_code' => $location['zip_code'],
+                'delivery_price' => $location['delivery_price'],
+                'city' => $location['city'],
+                'shop_id' => 508,  // Assuming the shop_id is 508
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+    
 
         return $this->successResponse(
             __('errors.' . ResponseError::RECORD_WAS_SUCCESSFULLY_UPDATED, locale: $this->language),
