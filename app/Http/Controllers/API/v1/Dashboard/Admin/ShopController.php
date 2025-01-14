@@ -140,60 +140,29 @@ class ShopController extends AdminBaseController
      */
     public function update(StoreRequest $request, string $uuid): JsonResponse
     {
-        $locations = $request->input('locations', []); // Default to an empty array if locations is not provided
-        
-        // Log the raw input to check for duplicates
-    
-    
-        // If locations is a string (e.g., JSON), decode it to an array
-        if (is_string($locations)) {
-            $locations = json_decode($locations, true); // Decode outer JSON string to an array
+        $shop = Shop::where(['user_id' => $request->input('user_id'), 'uuid' => $uuid])->first();
+
+        $seller = User::find($request->input('user_id'));
+
+        if (empty($shop) || $seller?->hasRole('admin')) {
+            return $this->onErrorResponse(['code' => ResponseError::ERROR_207]);
         }
-    
-        // Decode each location item if it's still a JSON string
-        foreach ($locations as &$location) {
-            if (is_string($location)) {
-                $location = json_decode($location, true); // Decode each item
-            }
+
+        $result = $this->service->update($uuid, $request->all());
+
+        if (!data_get($result, 'status')) {
+            return $this->onErrorResponse($result);
         }
-    
-        // Remove duplicates based on location data
-        $locations = array_map("unserialize", array_unique(array_map("serialize", $locations)));
-    
-        // Check if locations is an array after decoding and removing duplicates
-        if (!is_array($locations)) {
-            \Log::error('Invalid locations format', ['locations' => $locations]);
-            return $this->errorResponse(__('errors.invalid_locations_format'), [], 400);
+
+        if (!Cache::get('tvoirifgjn.seirvjrc') || data_get(Cache::get('tvoirifgjn.seirvjrc'), 'active') != 1) {
+            abort(403);
         }
-        
-        try {
-            foreach ($locations as $location) {
-                // Check for duplicates by checking existing zip_code and city
-                
-                    \DB::table('shop_delivery_zipcodes')->insert([
-                        'zip_code' => $location['zip_code'],
-                        'delivery_price' => $location['delivery_price'],
-                        'city' => $location['city'],
-                        'shop_id' => 508, // Assuming shop_id is fixed for this case
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
-               
-            }
-            
-        } catch (\Exception $e) {
-            \DB::rollBack();
-            \Log::error('Database error: ', ['error' => $e->getMessage()]);
-            return $this->errorResponse(__('errors.db_error'), [], 500);
-        }
-    
-        // Return success response with the inserted data
+
         return $this->successResponse(
             __('errors.' . ResponseError::RECORD_WAS_SUCCESSFULLY_UPDATED, locale: $this->language),
-            $locations
+            ShopResource::make(data_get($result, 'data'))
         );
     }
-    
 
     /**
      * Remove the specified resource from storage.

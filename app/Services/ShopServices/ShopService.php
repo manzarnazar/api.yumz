@@ -94,68 +94,106 @@ class ShopService extends CoreService implements ShopServiceInterface
      * @return array
      */
     public function update(string $uuid, array $data): array
-    {
-        try {
-            /** @var Shop $shop */
-            $shop = $this->model();
+{
+    try {
+        /** @var Shop $shop */
+        $shop = $this->model();
 
-            $shop = $shop->when(data_get($data, 'user_id'), fn($q, $userId) => $q->where('user_id', $userId))
-                ->where('uuid', $uuid)
-                ->first();
+        $shop = $shop->when(data_get($data, 'user_id'), fn($q, $userId) => $q->where('user_id', $userId))
+            ->where('uuid', $uuid)
+            ->first();
 
-            if (empty($shop)) {
-                return ['status' => false, 'code' => ResponseError::ERROR_404];
-            }
-
-            $shop->update($this->setShopParams($data, $shop));
-
-            if(data_get($data, 'categories.*', [])) {
-                (new ShopCategoryService)->update($data, $shop);
-            }
-
-            $this->setTranslations($shop, $data, true, true);
-
-            if (data_get($data, 'images.0')) {
-                $shop->galleries()->where('type', '!=', 'shop-documents')->delete();
-                $shop->update([
-                    'logo_img'       => data_get($data, 'images.0'),
-                    'background_img' => data_get($data, 'images.1'),
-                ]);
-                $shop->uploads(data_get($data, 'images'));
-            }
-
-			if (data_get($data, 'documents.0')) {
-				$shop->uploads(data_get($data, 'documents'));
-			}
-
-            if (data_get($data, 'tags.0')) {
-                $shop->tags()->sync(data_get($data, 'tags', []));
-            }
-
-            return [
-                'status' => true,
-                'code' => ResponseError::NO_ERROR,
-                'data' => Shop::with([
-					'translation' 			 => fn($q) => $q->where('locale', $this->language),
-					'subscription' 			 => fn($q) => $q->where('expired_at', '>=', now())->where('active', true),
-                    'categories.translation' => fn($q) => $q->where('locale', $this->language),
-                    'tags.translation'  	 => fn($q) => $q->where('locale', $this->language),
-                    'seller' 				 => fn($q) => $q->select('id', 'firstname', 'lastname', 'uuid'),
-					'subscription.subscription',
-					'seller.roles',
-                    'workingDays',
-                    'closedDates',
-                ])->find($shop->id)
-            ];
-        } catch (Exception $e) {
-            $this->error($e);
-            return [
-                'status'  => false,
-                'code'    => ResponseError::ERROR_502,
-                'message' => __('errors.' . ResponseError::ERROR_502, locale: $this->language)
-            ];
+        if (empty($shop)) {
+            return ['status' => false, 'code' => ResponseError::ERROR_404];
         }
+
+        $shop->update($this->setShopParams($data, $shop));
+
+        if (data_get($data, 'categories.*', [])) {
+            (new ShopCategoryService)->update($data, $shop);
+        }
+
+        $this->setTranslations($shop, $data, true, true);
+
+        if (data_get($data, 'images.0')) {
+            $shop->galleries()->where('type', '!=', 'shop-documents')->delete();
+            $shop->update([
+                'logo_img'       => data_get($data, 'images.0'),
+                'background_img' => data_get($data, 'images.1'),
+            ]);
+            $shop->uploads(data_get($data, 'images'));
+        }
+
+        if (data_get($data, 'documents.0')) {
+            $shop->uploads(data_get($data, 'documents'));
+        }
+
+        if (data_get($data, 'tags.0')) {
+            $shop->tags()->sync(data_get($data, 'tags', []));
+        }
+
+        // Location Handling
+        $locations = $data['locations'] ?? []; // Default to an empty array if locations is not provided
+
+        // If locations is a string (e.g., JSON), decode it to an array
+        if (is_string($locations)) {
+            $locations = json_decode($locations, true); // Decode outer JSON string to an array
+        }
+
+        // Decode each location item if it's still a JSON string
+        foreach ($locations as &$location) {
+            if (is_string($location)) {
+                $location = json_decode($location, true); // Decode each item
+            }
+        }
+
+        // Remove duplicates based on location data
+        $locations = array_map("unserialize", array_unique(array_map("serialize", $locations)));
+
+        // Check if locations is an array after decoding and removing duplicates
+        if (!is_array($locations)) {
+            \Log::error('Invalid locations format', ['locations' => $locations]);
+            return $this->errorResponse(__('errors.invalid_locations_format'), [], 400);
+        }
+
+        // Insert locations into shop_delivery_zipcodes
+        foreach ($locations as $location) {
+            // Check for duplicates by checking existing zip_code and city
+            \DB::table('shop_delivery_zipcodes')->insert([
+                'zip_code' => $location['zip_code'],
+                'delivery_price' => $location['delivery_price'],
+                'city' => $location['city'],
+                'shop_id' => $shop->id, // Assuming shop_id comes from the current shop
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        return [
+            'status' => true,
+            'code' => ResponseError::NO_ERROR,
+            'data' => Shop::with([
+                'translation' => fn($q) => $q->where('locale', $this->language),
+                'subscription' => fn($q) => $q->where('expired_at', '>=', now())->where('active', true),
+                'categories.translation' => fn($q) => $q->where('locale', $this->language),
+                'tags.translation' => fn($q) => $q->where('locale', $this->language),
+                'seller' => fn($q) => $q->select('id', 'firstname', 'lastname', 'uuid'),
+                'subscription.subscription',
+                'seller.roles',
+                'workingDays',
+                'closedDates',
+            ])->find($shop->id)
+        ];
+    } catch (Exception $e) {
+        $this->error($e);
+        return [
+            'status' => false,
+            'code' => ResponseError::ERROR_502,
+            'message' => __('errors.' . ResponseError::ERROR_502, locale: $this->language)
+        ];
     }
+}
+
 
     /**
      * Delete Shop model.
