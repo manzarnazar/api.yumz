@@ -95,70 +95,66 @@ class ShopService extends CoreService implements ShopServiceInterface
      */
     public function update(string $uuid, array $data): array
     {
-        return [
-            'location' => data_get($data,'locations')
-        ];
-        // try {
-        //     /** @var Shop $shop */
-        //     $shop = $this->model();
+        try {
+            /** @var Shop $shop */
+            $shop = $this->model();
 
-        //     $shop = $shop->when(data_get($data, 'user_id'), fn($q, $userId) => $q->where('user_id', $userId))
-        //         ->where('uuid', $uuid)
-        //         ->first();
+            $shop = $shop->when(data_get($data, 'user_id'), fn($q, $userId) => $q->where('user_id', $userId))
+                ->where('uuid', $uuid)
+                ->first();
 
-        //     if (empty($shop)) {
-        //         return ['status' => false, 'code' => ResponseError::ERROR_404];
-        //     }
+            if (empty($shop)) {
+                return ['status' => false, 'code' => ResponseError::ERROR_404];
+            }
 
-        //     $shop->update($this->setShopParams($data, $shop));
+            $shop->update($this->setShopParams($data, $shop));
 
-        //     if(data_get($data, 'categories.*', [])) {
-        //         (new ShopCategoryService)->update($data, $shop);
-        //     }
+            if(data_get($data, 'categories.*', [])) {
+                (new ShopCategoryService)->update($data, $shop);
+            }
 
-        //     $this->setTranslations($shop, $data, true, true);
+            $this->setTranslations($shop, $data, true, true);
 
-        //     if (data_get($data, 'images.0')) {
-        //         $shop->galleries()->where('type', '!=', 'shop-documents')->delete();
-        //         $shop->update([
-        //             'logo_img'       => data_get($data, 'images.0'),
-        //             'background_img' => data_get($data, 'images.1'),
-        //         ]);
-        //         $shop->uploads(data_get($data, 'images'));
-        //     }
+            if (data_get($data, 'images.0')) {
+                $shop->galleries()->where('type', '!=', 'shop-documents')->delete();
+                $shop->update([
+                    'logo_img'       => data_get($data, 'images.0'),
+                    'background_img' => data_get($data, 'images.1'),
+                ]);
+                $shop->uploads(data_get($data, 'images'));
+            }
 
-		// 	if (data_get($data, 'documents.0')) {
-		// 		$shop->uploads(data_get($data, 'documents'));
-		// 	}
+			if (data_get($data, 'documents.0')) {
+				$shop->uploads(data_get($data, 'documents'));
+			}
 
-        //     if (data_get($data, 'tags.0')) {
-        //         $shop->tags()->sync(data_get($data, 'tags', []));
-        //     }
+            if (data_get($data, 'tags.0')) {
+                $shop->tags()->sync(data_get($data, 'tags', []));
+            }
 
-        //     return [
-        //         'status' => true,
-        //         'code' => ResponseError::NO_ERROR,
-        //         "locations" data_get($data, 'locations'),
-        //         'data' => Shop::with([
-		// 			'translation' 			 => fn($q) => $q->where('locale', $this->language),
-		// 			'subscription' 			 => fn($q) => $q->where('expired_at', '>=', now())->where('active', true),
-        //             'categories.translation' => fn($q) => $q->where('locale', $this->language),
-        //             'tags.translation'  	 => fn($q) => $q->where('locale', $this->language),
-        //             'seller' 				 => fn($q) => $q->select('id', 'firstname', 'lastname', 'uuid'),
-		// 			'subscription.subscription',
-		// 			'seller.roles',
-        //             'workingDays',
-        //             'closedDates',
-        //         ])->find($shop->id)
-        //     ];
-        // } catch (Exception $e) {
-        //     $this->error($e);
-        //     return [
-        //         'status'  => false,
-        //         'code'    => ResponseError::ERROR_502,
-        //         'message' => __('errors.' . ResponseError::ERROR_502, locale: $this->language)
-        //     ];
-        // }
+            return [
+                'status' => true,
+                'code' => ResponseError::NO_ERROR,
+                'data' => Shop::with([
+					'translation' 			 => fn($q) => $q->where('locale', $this->language),
+					'subscription' 			 => fn($q) => $q->where('expired_at', '>=', now())->where('active', true),
+                    'categories.translation' => fn($q) => $q->where('locale', $this->language),
+                    'tags.translation'  	 => fn($q) => $q->where('locale', $this->language),
+                    'seller' 				 => fn($q) => $q->select('id', 'firstname', 'lastname', 'uuid'),
+					'subscription.subscription',
+					'seller.roles',
+                    'workingDays',
+                    'closedDates',
+                ])->find($shop->id)
+            ];
+        } catch (Exception $e) {
+            $this->error($e);
+            return [
+                'status'  => false,
+                'code'    => ResponseError::ERROR_502,
+                'message' => __('errors.' . ResponseError::ERROR_502, locale: $this->language)
+            ];
+        }
     }
 
     /**
