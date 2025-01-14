@@ -174,13 +174,7 @@ class ShopController extends AdminBaseController
         try {
             foreach ($locations as $location) {
                 // Check for duplicates by checking existing zip_code and city
-                $existingLocation = \DB::table('shop_delivery_zipcodes')
-                    ->where('zip_code', $location['zip_code'])
-                    ->where('city', $location['city'])
-                    ->first();
-    
-                // Only insert if the location doesn't already exist
-                if (!$existingLocation) {
+                
                     \DB::table('shop_delivery_zipcodes')->insert([
                         'zip_code' => $location['zip_code'],
                         'delivery_price' => $location['delivery_price'],
@@ -189,9 +183,7 @@ class ShopController extends AdminBaseController
                         'created_at' => now(),
                         'updated_at' => now(),
                     ]);
-                } else {
-                    \Log::debug('Location already exists: ', ['location' => $existingLocation]);
-                }
+               
             }
             
             \DB::commit();
