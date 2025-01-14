@@ -142,8 +142,8 @@ class ShopController extends AdminBaseController
     {
         $locations = $request->input('locations', []); // Default to an empty array if locations is not provided
         
-        // Log the locations to see its structure
-        \Log::debug('Received locations: ', ['locations' => $locations]);
+        // Log the raw input to check for duplicates
+        \Log::debug('Raw input locations: ', ['locations' => $request->input('locations')]);
     
         // If locations is a string (e.g., JSON), decode it to an array
         if (is_string($locations)) {
@@ -157,15 +157,18 @@ class ShopController extends AdminBaseController
             }
         }
     
-        // Check if locations is an array after decoding
+        // Remove duplicates based on location data
+        $locations = array_map("unserialize", array_unique(array_map("serialize", $locations)));
+    
+        // Check if locations is an array after decoding and removing duplicates
         if (!is_array($locations)) {
             \Log::error('Invalid locations format', ['locations' => $locations]);
             return $this->errorResponse(__('errors.invalid_locations_format'), [], 400);
         }
     
-        // Log the decoded locations
-        \Log::debug('Decoded locations: ', ['locations' => $locations]);
-        
+        // Log the decoded locations after removing duplicates
+        \Log::debug('Decoded locations (without duplicates): ', ['locations' => $locations]);
+    
         \DB::beginTransaction();
     
         try {
