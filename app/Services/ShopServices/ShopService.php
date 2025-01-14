@@ -64,43 +64,6 @@ class ShopService extends CoreService implements ShopServiceInterface
                 return $shop->id;
             });
 
-                  // Handle locations if provided
-        $locations = $data['locations'] ?? []; // Default to an empty array if locations is not provided
-
-        // Decode locations if it's a string (e.g., JSON)
-        if (is_string($locations)) {
-            $locations = json_decode($locations, true); // Decode outer JSON string to an array
-        }
-
-        // Decode each location item if it's still a JSON string
-        foreach ($locations as &$location) {
-            if (is_string($location)) {
-                $location = json_decode($location, true); // Decode each item
-            }
-        }
-
-        // Remove duplicates based on location data
-        $locations = array_map("unserialize", array_unique(array_map("serialize", $locations)));
-
-      
-        // Insert locations into shop_delivery_zipcodes
-        foreach ($locations as $location) {
-            // Ensure all required fields are present
-            if (!isset($location['zip_code'], $location['delivery_price'], $location['city'])) {
-                \Log::error('Missing required location data', ['location' => $location]);
-                continue; // Skip invalid location data
-            }
-
-            \DB::table('shop_delivery_zipcodes')->insert([
-                'zip_code' => $location['zip_code'],
-                'delivery_price' => $location['delivery_price'],
-                'city' => $location['city'],
-                'shop_id' => $shopId, // Use $shopId returned from the transaction
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        }
-
             return [
                 'status' => true,
                 'code' => ResponseError::NO_ERROR,
