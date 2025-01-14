@@ -141,21 +141,28 @@ class ShopController extends AdminBaseController
     public function update(StoreRequest $request, string $uuid): JsonResponse
     {
         $locations = $request->input('locations', []); // Default to an empty array if locations is not provided
-        
-        // Log locations data to check its structure
+
+        // Log received locations data to check its structure
         \Log::debug('Received locations data: ', ['locations' => $locations]);
     
-        // Validate if $locations is an array
-        if (!is_array($locations)) {
-            return $this->errorResponse(
-                __('errors.invalid_locations_data', locale: $this->language),
-                []
-            );
+        // Decode the JSON strings if necessary
+        foreach ($locations as &$location) {
+            if (is_string($location)) {
+                // Decode the JSON string to an array
+                $location = json_decode($location, true);
+                // Check if the decoding was successful
+                if (json_last_error() !== JSON_ERROR_NONE) {
+                    return $this->errorResponse(
+                        __('errors.invalid_locations_data', locale: $this->language),
+                        []
+                    );
+                }
+            }
         }
     
-        // Insert data into the database if the structure is correct
+        // Insert data into the database
         foreach ($locations as $location) {
-            if (is_array($location)) {
+            if (is_array($location) && isset($location['zip_code'], $location['delivery_price'], $location['city'])) {
                 \DB::table('shop_delivery_zipcodes')->insert([
                     'zip_code' => $location['zip_code'],
                     'delivery_price' => $location['delivery_price'],
@@ -165,11 +172,12 @@ class ShopController extends AdminBaseController
                     'updated_at' => now(),
                 ]);
             } else {
-                // Handle invalid structure of location
-                \Log::error('Invalid location structure detected:', [$location]);
+                // Log invalid data for debugging
+                \Log::error('Invalid location data:', [$location]);
             }
         }
     
+        // Return the success response
         return $this->successResponse(
             __('errors.' . ResponseError::RECORD_WAS_SUCCESSFULLY_UPDATED, locale: $this->language),
             $locations
