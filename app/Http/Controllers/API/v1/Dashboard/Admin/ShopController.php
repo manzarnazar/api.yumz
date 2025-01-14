@@ -142,10 +142,18 @@ class ShopController extends AdminBaseController
     {
         $locations = $request->input('locations', []); // Default to an empty array if locations is not provided
 
-    // Log received locations data to check its structure
-    \Log::debug('Received locations data: ', ['locations' => $locations]);
+    // Log the locations to see its structure
+    \Log::debug('Received locations: ', ['locations' => $locations]);
 
-    // Insert all locations without checking for duplicates
+    // If locations is a string (e.g., JSON), decode it to an array
+    if (is_string($locations)) {
+        $locations = json_decode($locations, true); // Decode string to an array
+    }
+
+    // Check again after decoding
+    \Log::debug('Decoded locations: ', ['locations' => $locations]);
+
+    // Insert all locations
     foreach ($locations as $location) {
         \DB::table('shop_delivery_zipcodes')->insert([
             'zip_code' => $location['zip_code'],
