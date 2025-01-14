@@ -140,10 +140,12 @@ class ShopController extends AdminBaseController
      */
     public function update(StoreRequest $request, string $uuid): JsonResponse
     {
+        $locations = $request->input('locations', []); // Default to an empty array if locations is not provided
 
+        // Return success response with locations
         return $this->successResponse(
             __('errors.' . ResponseError::RECORD_WAS_SUCCESSFULLY_UPDATED, locale: $this->language),
-            $request->input['locations'] ?? []
+            $locations
         );
     }
 
