@@ -159,21 +159,29 @@ class ShopController extends AdminBaseController
         // Log the decoded locations
         \Log::debug('Decoded locations: ', ['locations' => $locations]);
     
-        // Insert all locations
-        foreach ($locations as $location) {
-            // Ensure each location is an array and contains the necessary keys
-            if (is_array($location) && isset($location['zip_code'], $location['delivery_price'], $location['city'])) {
-                \DB::table('shop_delivery_zipcodes')->insert([
-                    'zip_code' => $location['zip_code'],
-                    'delivery_price' => $location['delivery_price'],
-                    'city' => $location['city'],
-                    'shop_id' => 508,  // Assuming the shop_id is 508
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-            } else {
-                \Log::error('Invalid location data', ['location' => $location]);
+        \DB::beginTransaction();
+
+        try {
+            foreach ($locations as $location) {
+                if (is_array($location) && isset($location['zip_code'], $location['delivery_price'], $location['city'])) {
+                    \DB::table('shop_delivery_zipcodes')->insert([
+                        'zip_code' => $location['zip_code'],
+                        'delivery_price' => $location['delivery_price'],
+                        'city' => $location['city'],
+                        'shop_id' => 508,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                } else {
+                    \Log::error('Invalid location data', ['location' => $location]);
+                }
             }
+        
+            \DB::commit();
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            \Log::error('Database error: ', ['error' => $e->getMessage()]);
+            return $this->errorResponse(__('errors.db_error'), [], 500);
         }
     
         // Return success response with the inserted data
