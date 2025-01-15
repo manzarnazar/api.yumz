@@ -108,14 +108,14 @@ class AdminShopRepository extends CoreRepository
 		}
 
     return $shop?->fresh([
-        'translation' => fn($q) => $q->where(fn($q) => $q->where('locale', $this->language)->orWhere('locale', $locale)),
-        'translations',
-		'subscription' => fn($q) => $q->where('expired_at', '>=', now())->where('active', true),
-		'subscription.subscription',
-        'seller:id,firstname,lastname,uuid',
-        'seller.roles',
-        'workingDays',
-        'closedDates',
+        // 'translation' => fn($q) => $q->where(fn($q) => $q->where('locale', $this->language)->orWhere('locale', $locale)),
+        // 'translations',
+		// 'subscription' => fn($q) => $q->where('expired_at', '>=', now())->where('active', true),
+		// 'subscription.subscription',
+        // 'seller:id,firstname,lastname,uuid',
+        // 'seller.roles',
+        // 'workingDays',
+        // 'closedDates',
         // 'categories:id',
         // 'documents',
         // 'categories.translation' => fn($q) => $q->select('category_id', 'id', 'locale', 'title')
