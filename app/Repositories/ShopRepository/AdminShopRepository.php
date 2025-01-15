@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Repositories\ShopRepository;
-use Illuminate\Support\Facades\DB;
+
 use App\Models\Language;
 use App\Models\Shop;
 use App\Repositories\CoreRepository;
@@ -96,65 +96,53 @@ class AdminShopRepository extends CoreRepository
     public function shopDetails(string $uuid): Model|Builder|null
     {
         $locale = data_get(Language::languagesList()->where('default', 1)->first(), 'locale');
-    
+
         if (!Cache::get('tvoirifgjn.seirvjrc') || data_get(Cache::get('tvoirifgjn.seirvjrc'), 'active') != 1) {
             abort(403);
         }
-    
-        $shop = Shop::where('uuid', $uuid)->first();
-    
-        if (empty($shop) || $shop->uuid !== $uuid) {
-            $shop = Shop::where('id', (int)$uuid)->first();
-        }
-    
-        if ($shop) {
-            // Fetch the delivery zip codes data for the shop
-            $deliveryZipCodes = DB::table('shop_delivery_zipcodes')
-                ->where('shop_id', $shop->id)
-                ->select('zip_code', 'delivery_price', 'city', 'shop_id')
-                ->get();
-    
-            // Attach the delivery zip codes data to the shop instance
-            $shop->delivery_zipcodes = $deliveryZipCodes;
-    
-            return $shop->fresh([
-                'translation' => fn($q) => $q->where(fn($q) => $q->where('locale', $this->language)->orWhere('locale', $locale)),
-                'translations',
-                'subscription' => fn($q) => $q->where('expired_at', '>=', now())->where('active', true),
-                'subscription.subscription',
-                'seller:id,firstname,lastname,uuid',
-                'seller.roles',
-                'workingDays',
-                'closedDates',
-                'categories:id',
-                'documents',
-                'categories.translation' => fn($q) => $q->select('category_id', 'id', 'locale', 'title')
-                    ->where(fn($q) => $q->where('locale', $this->language)->orWhere('locale', $locale)),
-                'bonus' => fn($q) => $q->where('expired_at', '>', now())->where('status', true)
-                    ->select([
-                        'bonusable_type',
-                        'bonusable_id',
-                        'bonus_quantity',
-                        'bonus_stock_id',
-                        'expired_at',
-                        'value',
-                        'type',
-                    ]),
-                'bonus.stock.countable' => fn($q) => $q->select('id', 'uuid'),
-                'bonus.stock.countable.translation' => fn($q) => $q->where(fn($q) => $q->where('locale', $this->language)->orWhere('locale', $locale))
-                    ->select('id', 'locale', 'title', 'product_id'),
-                'discounts' => fn($q) => $q->where('end', '>=', now())
-                    ->select('id', 'shop_id', 'type', 'end', 'price', 'active', 'start'),
-                'shopPayments:id,payment_id,shop_id,status,client_id,secret_id',
-                'shopPayments.payment:id,tag,input,sandbox,active',
-                'tags:id,img',
-                'tags.translation' => fn($q) => $q->where(fn($q) => $q->where('locale', $this->language)->orWhere('locale', $locale)),
-            ]);
-        }
-    
-        return null;
-    }
-    
+
+		$shop = Shop::where('uuid', $uuid)->first();
+
+		if (empty($shop) || $shop->uuid !== $uuid) {
+			$shop = Shop::where('id', (int)$uuid)->first();
+		}
+
+    return $shop?->fresh([
+        'translation' => fn($q) => $q->where(fn($q) => $q->where('locale', $this->language)->orWhere('locale', $locale)),
+        'translations',
+		'subscription' => fn($q) => $q->where('expired_at', '>=', now())->where('active', true),
+		'subscription.subscription',
+        'seller:id,firstname,lastname,uuid',
+        'seller.roles',
+        'workingDays',
+        'closedDates',
+        'categories:id',
+        'documents',
+        'categories.translation' => fn($q) => $q->select('category_id', 'id', 'locale', 'title')
+            ->where(fn($q) => $q->where('locale', $this->language)->orWhere('locale', $locale)),
+        'bonus' => fn($q) => $q->where('expired_at', '>', now())->where('status', true)
+            ->select([
+                'bonusable_type',
+                'bonusable_id',
+                'bonus_quantity',
+                'bonus_stock_id',
+                'expired_at',
+                'value',
+                'type',
+            ]),
+        'bonus.stock.countable' => fn($q) => $q->select('id', 'uuid'),
+        'bonus.stock.countable.translation' => fn($q) => $q->where(fn($q) => $q->where('locale', $this->language)->orWhere('locale', $locale))
+            ->select('id', 'locale', 'title', 'product_id'),
+        'discounts' => fn($q) => $q->where('end', '>=', now())
+            ->select('id', 'shop_id', 'type', 'end', 'price', 'active', 'start'),
+        'shopPayments:id,payment_id,shop_id,status,client_id,secret_id',
+        'shopPayments.payment:id,tag,input,sandbox,active',
+        'tags:id,img',
+        'tags.translation' => fn($q) => $q->where(fn($q) => $q->where('locale', $this->language)->orWhere('locale', $locale)),
+        'shopDeliveryZipcodes' => fn($q) => $q->select('zip_code', 'delivery_price', 'city', 'shop_id')
+            ->where('shop_id', $shop->id),
+    ]);
+}
 
     /**
      * @param array $filter
