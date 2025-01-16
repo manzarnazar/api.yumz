@@ -103,6 +103,34 @@ class ShopController extends AdminBaseController
             ShopResource::make(data_get($result, 'data'))
         );
     }
+    public function zipcodes(StoreRequest $request): JsonResponse
+    {
+        $request->validate([
+            'shop_id' => 'required|integer'
+        ]);
+
+        $shopId = $request->input('shop_id');
+
+        // Query the shop_delivery_zipcodes table directly using the Query Builder
+        $zipcodes = DB::table('shop_delivery_zipcodes')
+            ->where('shop_id', $shopId)
+            ->select('zip_code', 'delivery_price', 'city')
+            ->get();
+
+        // Check if data exists
+        if ($zipcodes->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No data found for the given shop ID.'
+            ], 404);
+        }
+
+        // Return a JSON response
+        return response()->json([
+            'success' => true,
+            'data' => $zipcodes
+        ]);
+    }
 
     /**
      * Display the specified resource.
