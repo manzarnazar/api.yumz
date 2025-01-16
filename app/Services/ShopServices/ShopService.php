@@ -65,7 +65,7 @@ class ShopService extends CoreService implements ShopServiceInterface
             });
 
                   // Handle locations if provided
-        $locations = $data['locations'] ?? []; // Default to an empty array if locations is not provided
+        $locations = $data['shop_delivery_zipcodes'] ?? []; // Default to an empty array if locations is not provided
 
         // Decode locations if it's a string (e.g., JSON)
         if (is_string($locations)) {
@@ -131,57 +131,85 @@ class ShopService extends CoreService implements ShopServiceInterface
      * @return array
      */
     public function update(string $uuid, array $data): array
-    {
-        try {
-            /** @var Shop $shop */
-            $shop = $this->model();
-    
-            // Fetch shop by UUID and optional user_id
-            $shop = $shop->when(
-                data_get($data, 'user_id'),
-                fn($q, $userId) => $q->where('user_id', $userId)
-            )->where('uuid', $uuid)->first();
-    
-            if (empty($shop)) {
-                return ['status' => false, 'code' => ResponseError::ERROR_404];
+{
+    try {
+        /** @var Shop $shop */
+        $shop = $this->model();
+
+        $shop = $shop->when(data_get($data, 'user_id'), fn($q, $userId) => $q->where('user_id', $userId))
+            ->where('uuid', $uuid)
+            ->first();
+
+        if (empty($shop)) {
+            return ['status' => false, 'code' => ResponseError::ERROR_404];
+        }
+
+        $shop->update($this->setShopParams($data, $shop));
+
+        if (data_get($data, 'categories.*', [])) {
+            (new ShopCategoryService)->update($data, $shop);
+        }
+
+        $this->setTranslations($shop, $data, true, true);
+
+        if (data_get($data, 'images.0')) {
+            $shop->galleries()->where('type', '!=', 'shop-documents')->delete();
+            $shop->update([
+                'logo_img'       => data_get($data, 'images.0'),
+                'background_img' => data_get($data, 'images.1'),
+            ]);
+            $shop->uploads(data_get($data, 'images'));
+        }
+
+        if (data_get($data, 'documents.0')) {
+            $shop->uploads(data_get($data, 'documents'));
+        }
+
+        if (data_get($data, 'tags.0')) {
+            $shop->tags()->sync(data_get($data, 'tags', []));
+        }
+
+        // Location Handling
+        $locations = $data['shop_delivery_zipcodes'] ?? []; // Default to an empty array if locations is not provided
+
+        // If locations is a string (e.g., JSON), decode it to an array
+        if (is_string($locations)) {
+            $locations = json_decode($locations, true); // Decode outer JSON string to an array
+        }
+
+        // Decode each location item if it's still a JSON string
+        foreach ($locations as &$location) {
+            if (is_string($location)) {
+                $location = json_decode($location, true); // Decode each item
             }
-    
-            // Update shop with provided parameters
-            $shop->update($this->setShopParams($data, $shop));
-    
-            // Update categories if provided
-            if (data_get($data, 'categories.*', [])) {
-                (new ShopCategoryService)->update($data, $shop);
-            }
-    
-            // Set translations
-            $this->setTranslations($shop, $data, true, true);
-    
-            // Handle images
-            if (data_get($data, 'images.0')) {
-                $shop->galleries()->where('type', '!=', 'shop-documents')->delete();
-                $shop->update([
-                    'logo_img' => data_get($data, 'images.0'),
-                    'background_img' => data_get($data, 'images.1'),
-                ]);
-                $shop->uploads(data_get($data, 'images'));
-            }
-    
-            // Handle documents
-            if (data_get($data, 'documents.0')) {
-                $shop->uploads(data_get($data, 'documents'));
-            }
-    
-            // Handle tags
-            if (data_get($data, 'tags.0')) {
-                $shop->tags()->sync(data_get($data, 'tags', []));
-            }
-    
-            // Handle locations
-            $this->handleLocations($data['locations'] ?? [], $shop->id);
-    
-            // Prepare response with related data
-            $shopData = Shop::with([
+        }
+
+        // Remove duplicates based on location data
+        $locations = array_map("unserialize", array_unique(array_map("serialize", $locations)));
+
+        // Check if locations is an array after decoding and removing duplicates
+        if (!is_array($locations)) {
+            \Log::error('Invalid locations format', ['locations' => $locations]);
+            return $this->errorResponse(__('errors.invalid_locations_format'), [], 400);
+        }
+
+        // Insert locations into shop_delivery_zipcodes
+        foreach ($locations as $location) {
+            // Check for duplicates by checking existing zip_code and city
+            \DB::table('shop_delivery_zipcodes')->updateOrInsert([
+                'zip_code' => $location['zip_code'],
+                'delivery_price' => $location['delivery_price'],
+                'city' => $location['city'],
+                'shop_id' => $shop->id, // Assuming shop_id comes from the current shop
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        return [
+            'status' => true,
+            'code' => ResponseError::NO_ERROR,
+            'data' => Shop::with([
                 'translation' => fn($q) => $q->where('locale', $this->language),
                 'subscription' => fn($q) => $q->where('expired_at', '>=', now())->where('active', true),
                 'categories.translation' => fn($q) => $q->where('locale', $this->language),
@@ -191,69 +219,18 @@ class ShopService extends CoreService implements ShopServiceInterface
                 'seller.roles',
                 'workingDays',
                 'closedDates',
-            ])->find($shop->id);
-    
-            return [
-                'status' => true,
-                'code' => ResponseError::NO_ERROR,
-                'data' => $shopData,
-            ];
-        } catch (Exception $e) {
-            $this->error($e);
-            return [
-                'status' => false,
-                'code' => ResponseError::ERROR_502,
-                'message' => __('errors.' . ResponseError::ERROR_502, locale: $this->language),
-            ];
-        }
+            ])->find($shop->id)
+        ];
+    } catch (Exception $e) {
+        $this->error($e);
+        return [
+            'status' => false,
+            'code' => ResponseError::ERROR_502,
+            'message' => __('errors.' . ResponseError::ERROR_502, locale: $this->language)
+        ];
     }
-    
-    /**
-     * Handle locations and update shop_delivery_zipcodes table.
-     *
-     * @param array|string $locations
-     * @param int $shopId
-     */
-    private function handleLocations($locations, int $shopId): void
-    {
-        if (is_string($locations)) {
-            $locations = json_decode($locations, true); // Decode JSON string to array
-        }
-    
-        foreach ($locations as &$location) {
-            if (is_string($location)) {
-                $location = json_decode($location, true); // Decode each location item
-            }
-        }
-    
-        // Remove duplicates and validate format
-        $locations = array_map('unserialize', array_unique(array_map('serialize', $locations)));
-        if (!is_array($locations)) {
-            \Log::error('Invalid locations format', ['locations' => $locations]);
-            throw new \Exception(__('errors.invalid_locations_format'));
-        }
-    
-        // Insert or update locations
-        foreach ($locations as $location) {
-            if (!isset($location['zip_code'], $location['delivery_price'], $location['city'])) {
-                \Log::error('Missing required location keys', ['location' => $location]);
-                continue;
-            }
-    
-            \DB::table('shop_delivery_zipcodes')->updateOrInsert(
-                [
-                    'shop_id' => $shopId,
-                    'zip_code' => $location['zip_code'],
-                    'city' => $location['city'],
-                ],
-                [
-                    'delivery_price' => $location['delivery_price'],
-                    'updated_at' => now(),
-                ]
-            );
-        }
-    }
-    
+}
+
 
     /**
      * Delete Shop model.
