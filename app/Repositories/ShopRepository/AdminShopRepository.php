@@ -104,10 +104,18 @@ class AdminShopRepository extends CoreRepository
     $shop = Shop::where('uuid', $uuid)->first();
 
     if (empty($shop) || $shop->uuid !== $uuid) {
-        $shop = Shop::where('id', (int)$uuid)->first();
+        $shop = Shop::where('id', (int) $uuid)->first();
     }
 
     if ($shop) {
+        $shopDeliveryZipcodes = \DB::table('shop_delivery_zipcodes')
+            ->select('zip_code', 'delivery_price', 'city', 'shop_id')
+            ->where('shop_id', $shop->id)
+            ->get();
+
+        // Dynamically add the zip codes to the shop object
+        $shop->delivery_zipcodes = $shopDeliveryZipcodes;
+
         return $shop->fresh([
             'translation' => fn($q) => $q->where(fn($q) => $q->where('locale', $this->language)->orWhere('locale', $locale)),
             'translations',
@@ -140,11 +148,6 @@ class AdminShopRepository extends CoreRepository
             'shopPayments.payment:id,tag,input,sandbox,active',
             'tags:id,img',
             'tags.translation' => fn($q) => $q->where(fn($q) => $q->where('locale', $this->language)->orWhere('locale', $locale)),
-            // Custom relationship for shop_delivery_zipcodes
-            'shopDeliveryZipcodes' => fn() => \DB::table('shop_delivery_zipcodes')
-                ->select('zip_code', 'delivery_price', 'city', 'shop_id')
-                ->where('shop_id', $shop->id)
-                ->get(),
         ]);
     }
 
