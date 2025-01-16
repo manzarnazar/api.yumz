@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\API\v1\Dashboard\Admin;
 
-use Illuminate\Support\Facades\DB;
 use App\Exports\ShopExport;
 use App\Helpers\ResponseError;
 use App\Http\Requests\FilterParamsRequest;
@@ -119,18 +118,19 @@ class ShopController extends AdminBaseController
             ->get();
 
         // Check if data exists
-        // if ($zipcodes->isEmpty()) {
-        //     return response()->json([
-        //         'success' => false,
-        //         'message' => 'No data found for the given shop ID.'
-        //     ], 200);
-        // }
+        if ($zipcodes->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No data found for the given shop ID.'
+            ], 404);
+        }
 
         // Return a JSON response
         return response()->json([
             'success' => true,
-            'data' => $shopId
+            'data' => $zipcodes
         ]);
+
     }
 
     /**

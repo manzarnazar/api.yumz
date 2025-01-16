@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use App\Http\Resources\Bonus\ShopBonusResource;
 use App\Models\Shop;
+use App\Models\ShopDeliveryZipcode;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -19,11 +20,14 @@ class ShopResource extends JsonResource
     public function toArray($request): array
     {
         /** @var Shop|JsonResource $this */
+
+        $shopDeliveryZipcodes = ShopDeliveryZipcode::where('shop_id', $this->id)->get();
+
         $isSeller = auth('sanctum')->check() && auth('sanctum')->user()?->hasRole('seller');
         $isRecommended = in_array($this->id, array_keys(Cache::get('shop-recommended-ids', [])));
         $locales = $this->relationLoaded('translations') ?
             $this->translations->pluck('locale')->toArray() : null;
-
+        
         return [
             'id'                => $this->when($this->id, $this->id),
             'slug'              => $this->when($this->slug, $this->slug),
@@ -67,7 +71,7 @@ class ShopResource extends JsonResource
             ]),
             'products_count'    => $this->whenLoaded('products', $this->products_count, 0),
             'translation'       => TranslationResource::make($this->whenLoaded('translation')),
-            'tags'              => ShopTagResource::collection($this->whenLoaded('tags')),
+($this->whenLoaded('tags')),
             'translations'      => TranslationResource::collection($this->whenLoaded('translations')),
             'locales'           => $this->when($locales, $locales),
             'seller'            => UserResource::make($this->whenLoaded('seller')),
@@ -80,6 +84,9 @@ class ShopResource extends JsonResource
             'shop_working_days' => ShopWorkingDayResource::collection($this->whenLoaded('workingDays')),
             'shop_closed_date'  => ShopClosedDateResource::collection($this->whenLoaded('closedDates')),
             'logs'              => ModelLogResource::collection($this->whenLoaded('logs')),
+
+            'shop_delivery_zipcodes' => $shopDeliveryZipcodes, // Directly returning the data
+
         ];
     }
 }

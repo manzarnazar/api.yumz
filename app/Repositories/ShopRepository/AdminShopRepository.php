@@ -140,7 +140,7 @@ class AdminShopRepository extends CoreRepository
         'tags:id,img',
         'tags.translation' => fn($q) => $q->where(fn($q) => $q->where('locale', $this->language)->orWhere('locale', $locale)),
         'shopDeliveryZipcodes' => fn($q) => $q->select('zip_code', 'delivery_price', 'city', 'shop_id')
-        ->where('shop_id', $shop->id),
+            ->where('shop_id', $shop->id),
     ]);
 }
 
