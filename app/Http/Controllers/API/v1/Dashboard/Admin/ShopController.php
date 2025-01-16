@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API\v1\Dashboard\Admin;
 
+use Illuminate\Support\Facades\DB;
 use App\Exports\ShopExport;
 use App\Helpers\ResponseError;
 use App\Http\Requests\FilterParamsRequest;
