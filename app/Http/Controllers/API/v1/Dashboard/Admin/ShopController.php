@@ -119,17 +119,17 @@ class ShopController extends AdminBaseController
             ->get();
 
         // Check if data exists
-        if ($zipcodes->isEmpty()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No data found for the given shop ID.'
-            ], 404);
-        }
+        // if ($zipcodes->isEmpty()) {
+        //     return response()->json([
+        //         'success' => false,
+        //         'message' => 'No data found for the given shop ID.'
+        //     ], 200);
+        // }
 
         // Return a JSON response
         return response()->json([
             'success' => true,
-            'data' => $zipcodes
+            'data' => $shopId
         ]);
     }
 
