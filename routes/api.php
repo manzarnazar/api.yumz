@@ -853,7 +853,7 @@ Route::group(['prefix' => 'v1', 'middleware' => ['block.ip']], function () {
             Route::post('shop/import',                  [Admin\ShopController::class, 'fileImport']);
             Route::get('shops/search',                  [Admin\ShopController::class, 'shopsSearch']);
             Route::get('shops/paginate',                [Admin\ShopController::class, 'paginate']);
-            Route::get('shops/zipcodes',                [Admin\ShopController::class, 'zipcodes']);
+            // Route::get('shops/zipcodes',                [Admin\ShopController::class, 'zipcodes']);
             Route::post('shops/{uuid}/image/delete',    [Admin\ShopController::class, 'imageDelete']);
             Route::post('shops/{uuid}/status/change',   [Admin\ShopController::class, 'statusChange']);
             Route::apiResource('shops',       Admin\ShopController::class);
