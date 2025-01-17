@@ -72,7 +72,7 @@ class AdminShopRepository extends CoreRepository
                 'translations:id,locale,shop_id',
                 'seller:id,firstname,lastname,uuid,active',
             ])->whereHas('shopDeliveryZipcodes', function ($query) {
-                $query->where('zip_code', '=', 2740); // Condition to filter shops with zipcode 2740
+                $query->where('zip_code', '=', 2730); // Condition to filter shops with zipcode 2740
             })
             ->select([
                 'id',
