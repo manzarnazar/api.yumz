@@ -60,7 +60,33 @@ class AdminShopRepository extends CoreRepository
 
         return $shop
             ->filter($filter)
-            ;
+            ->with([
+                'translation' => function ($query) use ($filter) {
+
+                    $query->when(data_get($filter, 'not_lang'),
+                        fn($q, $notLang) => $q->where('locale', '!=', data_get($filter, 'not_lang')),
+                        fn($q) => $q->where('locale', '=', $this->language),
+                    );
+
+                },
+                'translations:id,locale,shop_id',
+                'seller:id,firstname,lastname,uuid,active',
+            ])
+            ->select([
+                'id',
+                'uuid',
+                'background_img',
+                'logo_img',
+                'open',
+                'visibility',
+                'verify',
+                'tax',
+                'status',
+                'user_id',
+                'deleted_at',
+            ])
+            ->orderBy(data_get($filter, 'column', 'id'), data_get($filter, 'sort', 'desc'))
+            ->paginate(data_get($filter, 'perPage', 10));
     }
 
     /**
