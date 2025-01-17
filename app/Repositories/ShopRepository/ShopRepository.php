@@ -137,8 +137,8 @@ class ShopRepository extends CoreRepository implements ShopRepoInterface
                     ->where('end', '>=', now())
                     ->where('active', 1)
                     ->select('id', 'shop_id', 'end', 'active'),
-            ]) ->when(data_get($filter, 'zip_code'), function (Builder $q, $zipCode) {
-            $q->whereHas('shopDeliveryZipcodes', fn($query) => $query->where('zip_code', $zipCode));
+            ]) ->when(data_get($filter, 'zip_code'), function (Builder $q, $zip_code) {
+            $q->whereHas('shopDeliveryZipcodes', fn($query) => $query->where('zip_code', $zip_code));
         })
             ->whereHas('translation', function ($query) use ($filter) {
 
