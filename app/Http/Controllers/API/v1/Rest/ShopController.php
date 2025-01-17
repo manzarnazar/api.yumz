@@ -51,7 +51,7 @@ class ShopController extends RestBaseController
         
 
         $zipCode = $request->input('zip_code');
-        return response()->json(['zip_code' => $zipCode]);
+        return response()->json(['zip_code' => '1234']);
     }
 
 	/**
