@@ -101,7 +101,7 @@ class ShopRepository extends CoreRepository implements ShopRepoInterface
         /** @var Shop $shop */
         $shop = $this->model();
 
-		$filter['zip_code'] = 2600; // Hardcoded zip_code for testing
+		// $filter['zip_code'] = 2600; // Hardcoded zip_code for testing
 
 
         return $shop
