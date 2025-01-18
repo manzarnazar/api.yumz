@@ -5,6 +5,7 @@ namespace App\Services\ShopServices;
 use App\Helpers\FileHelper;
 use App\Helpers\ResponseError;
 use App\Models\Shop;
+use App\Models\ShopDeliveryZipcode;
 use App\Models\User;
 use App\Services\CoreService;
 use App\Services\Interfaces\ShopServiceInterface;
@@ -172,8 +173,6 @@ class ShopService extends CoreService implements ShopServiceInterface
 
         $locations = $data['shop_delivery_zipcodes'] ?? []; 
 
-        dd("testing",$locations);
-
 
         if (is_string($locations)) {
             $locations = json_decode($locations, true); // Decode outer JSON string to an array
@@ -195,16 +194,21 @@ class ShopService extends CoreService implements ShopServiceInterface
             return $this->errorResponse(__('errors.invalid_locations_format'), [], 400);
         }
 
+        $oldData =ShopDeliveryZipcode::where("shop_id",$shop->id)->get(['id']);
+
+        if($oldData->count() > 0){
+            foreach($oldData as $oldD){
+                $oldD->delete();
+            }
+        }
 
         foreach ($locations as $location) {
 
-            \DB::table('shop_delivery_zipcodes')->updateOrInsert([
+            ShopDeliveryZipcode::create([
                 'zip_code' => $location['zip_code'],
                 'delivery_price' => $location['delivery_price'],
                 'city' => $location['city'],
                 'shop_id' => $shop->id,
-                'created_at' => now(),
-                'updated_at' => now(),
             ]);
         }
 
