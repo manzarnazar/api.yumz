@@ -9,6 +9,7 @@ use App\Http\Requests\DeliveryZone\DistanceRequest;
 use App\Http\Requests\FilterParamsRequest;
 use App\Models\DeliveryZone;
 use App\Models\Shop;
+use App\Models\ShopDeliveryZipcode;
 use App\Traits\SetCurrency;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -88,32 +89,17 @@ class DeliveryZoneController extends RestBaseController
 	 */
 	public function checkDistance(CheckDistanceRequest $request): JsonResponse
 	{
-		$shops = Shop::with('deliveryZone:id,shop_id,address')
-			->where([
-				['open', 1],
-				['status', 'approved'],
-			])
-			->whereHas('deliveryZone')
-			->select(['id', 'open', 'status'])
-			->get();
+		$requestedZipCode = $request->input('address.zip_code');
 
-		foreach ($shops as $shop) {
-
-			/** @var Shop $shop */
-			$deliveryZone = $shop->deliveryZone;
-
-			if (!is_array($deliveryZone?->address) || count($deliveryZone?->address ?? []) === 0) {
-				continue;
-			}
-
-			$check = Utility::pointInPolygon($request->input('address'), $shop->deliveryZone->address);
-
-			if ($check) {
-				return $this->successResponse('success', 'success');
-			}
-
+		// Check if the requested zip code exists in the shop_delivery_zipcodes table
+		$zipCodeExists = ShopDeliveryZipcode::where('zip_code', $requestedZipCode)->exists();
+	
+		// If the zip code exists, return success response
+		if ($zipCodeExists) {
+			return $this->successResponse('success', 'Zip code matched successfully');
 		}
-
+	
+		// If the zip code does not exist, return error response
 		return $this->onErrorResponse([
 			'code'    => ResponseError::ERROR_400,
 			'message' => __('errors.' . ResponseError::ERROR_400, locale: $this->language)
