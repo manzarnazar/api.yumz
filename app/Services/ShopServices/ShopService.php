@@ -169,15 +169,17 @@ class ShopService extends CoreService implements ShopServiceInterface
             $shop->tags()->sync(data_get($data, 'tags', []));
         }
 
-        // Location Handling
-        $locations = $data['shop_delivery_zipcodes'] ?? []; // Default to an empty array if locations is not provided
 
-        // If locations is a string (e.g., JSON), decode it to an array
+        $locations = $data['shop_delivery_zipcodes'] ?? []; 
+
+        dd("testing",$locations);
+
+
         if (is_string($locations)) {
             $locations = json_decode($locations, true); // Decode outer JSON string to an array
         }
 
-        // Decode each location item if it's still a JSON string
+
         foreach ($locations as &$location) {
             if (is_string($location)) {
                 $location = json_decode($location, true); // Decode each item
@@ -187,20 +189,20 @@ class ShopService extends CoreService implements ShopServiceInterface
         // Remove duplicates based on location data
         $locations = array_map("unserialize", array_unique(array_map("serialize", $locations)));
 
-        // Check if locations is an array after decoding and removing duplicates
+
         if (!is_array($locations)) {
             \Log::error('Invalid locations format', ['locations' => $locations]);
             return $this->errorResponse(__('errors.invalid_locations_format'), [], 400);
         }
 
-        // Insert locations into shop_delivery_zipcodes
+
         foreach ($locations as $location) {
-            // Check for duplicates by checking existing zip_code and city
+
             \DB::table('shop_delivery_zipcodes')->updateOrInsert([
                 'zip_code' => $location['zip_code'],
                 'delivery_price' => $location['delivery_price'],
                 'city' => $location['city'],
-                'shop_id' => $shop->id, // Assuming shop_id comes from the current shop
+                'shop_id' => $shop->id,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
