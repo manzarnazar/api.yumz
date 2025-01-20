@@ -16,7 +16,7 @@ class ShopDeliveryZipcode extends Model
     protected $primaryKey = 'id';
 
     // Define the columns that are mass assignable
-    protected $fillable = ['zip_code', 'delivery_price', 'city', 'shop_id'];
+    protected $guarded = [];
 
     // Define the inverse of the relationship
     public function shop()
