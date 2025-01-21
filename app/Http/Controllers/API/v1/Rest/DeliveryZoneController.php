@@ -96,7 +96,7 @@ class DeliveryZoneController extends RestBaseController
 	
 		// If the zip code exists, return success response
 		if ($zipCodeExists) {
-			return $this->successResponse('success', 'Zip code matched successfully');
+			return $this->successResponse('success', $requestedZipCode);
 		}
 	
 		// If the zip code does not exist, return error response
