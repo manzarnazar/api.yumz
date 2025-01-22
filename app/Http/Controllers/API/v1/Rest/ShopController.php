@@ -54,8 +54,8 @@ class ShopController extends RestBaseController
     
         // Return only zip_code and city in the response
         return [
-            'zip_code' => $this->zip_code,
-            'city' => $this->city,
+            'zip_code' => $this->$zipCode,
+            'city' => $this->$city,
         ];
     }
 
