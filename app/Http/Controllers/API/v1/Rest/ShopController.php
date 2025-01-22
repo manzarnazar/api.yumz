@@ -47,22 +47,25 @@ class ShopController extends RestBaseController
      * @return AnonymousResourceCollection
      */
     public function paginate(FilterParamsRequest $request): AnonymousResourceCollection
-{
-    // Extract the data from the request
-    $zipCode = $request->input('zip_code');
-    $city = $request->input('city');
-
-    // Create a collection with the extracted data
-    $data = collect([
-        [
-            'zip_code' => $zipCode,
-            'city' => $city,
-        ]
-    ]);
-
-    // Return the data wrapped in an AnonymousResourceCollection
-    return ShopResource::collection($data);
-}
+    {
+        // Extract the data from the request
+        $zipCode = $request->input('zip_code');
+        $city = $request->input('city');
+    
+        // Create a collection with the extracted data
+        $data = collect([
+            [
+                'zip_code' => $zipCode,
+                'city' => $city,
+            ]
+        ]);
+    
+        // Return an AnonymousResourceCollection directly
+        return new AnonymousResourceCollection($data, function ($item) {
+            return $item;
+        });
+    }
+    
 
 
 	/**
