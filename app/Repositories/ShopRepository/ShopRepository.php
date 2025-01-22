@@ -101,7 +101,7 @@ class ShopRepository extends CoreRepository implements ShopRepoInterface
         /** @var Shop $shop */
         $shop = $this->model();
 
-		// $filter['zip_code'] = 2600; // Hardcoded zip_code for testing
+		$filter['zip_code'] = 2730; // Hardcoded zip_code for testing
 
 
         return $shop
@@ -137,8 +137,8 @@ class ShopRepository extends CoreRepository implements ShopRepoInterface
                     ->where('end', '>=', now())
                     ->where('active', 1)
                     ->select('id', 'shop_id', 'end', 'active'),
-            ]) ->when(data_get($filter, 'city'), function (Builder $q, $zipCode) {
-            $q->whereHas('shopDeliveryZipcodes', fn($query) => $query->where('city', $zipCode));
+            ]) ->when(data_get($filter, 'zip_code'), function (Builder $q, $zipCode) {
+            $q->whereHas('shopDeliveryZipcodes', fn($query) => $query->where('zip_code', $zipCode));
         })
             ->whereHas('translation', function ($query) use ($filter) {
 
