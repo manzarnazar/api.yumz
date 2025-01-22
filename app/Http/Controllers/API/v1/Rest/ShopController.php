@@ -48,22 +48,15 @@ class ShopController extends RestBaseController
      */
     public function paginate(FilterParamsRequest $request): AnonymousResourceCollection
     {
-        $visibility = (int)Settings::where('key', 'by_subscription')->first()?->value;
-
-        $merge = [
-            'status'    => 'approved',
-            'currency'  => $this->currency,
-        ];
-
-        if ($visibility) {
-            $merge += ['visibility' => true];
-        }
-
-        $shops = $this->shopRepository->shopsPaginate(
-            $request->merge($merge)->all()
-        );
-
-        return ShopResource::collection($shops);
+        // Extract the data from the request
+        $zipCode = $request->input('zip_code');
+        $city = $request->input('city');
+    
+        // Return only zip_code and city in the response
+        return response()->json([
+            'zip_code' => $zipCode,
+            'city' => $city,
+        ]);
     }
 
 	/**
