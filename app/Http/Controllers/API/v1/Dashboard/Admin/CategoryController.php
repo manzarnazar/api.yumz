@@ -80,10 +80,7 @@ class CategoryController extends AdminBaseController
      */
     public function store(CategoryCreateRequest $request): JsonResponse
     {
-        $data = $request->validated();
-        $data['status'] = 'published';  // Set the status to 'published'
-    
-        $result = $this->categoryService->create($data);
+        $result = $this->categoryService->create($request->validated());
 
         if (!data_get($result, 'status')) {
             return $this->onErrorResponse($result);
