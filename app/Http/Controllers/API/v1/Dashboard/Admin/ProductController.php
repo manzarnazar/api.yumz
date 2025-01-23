@@ -79,7 +79,9 @@ class ProductController extends AdminBaseController
      */
     public function store(AdminRequest $request): JsonResponse
     {
-        $result = $this->productService->create($request->validated());
+        $data = $request->validated();
+        $data['status'] = 'published';  // Set the status to 'published'
+        $result = $this->productService->create($data);
 
         if (!data_get($result, 'status')) {
             return $this->onErrorResponse($result);
