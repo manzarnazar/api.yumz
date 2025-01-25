@@ -116,31 +116,54 @@ class DeliveryZoneController extends RestBaseController
 	 */
 	public function checkDistanceByShop(int $id, CheckDistanceRequest $request): JsonResponse
 	{
-		/** @var Shop $shop */
-		$shop = Shop::with('deliveryZone:id,shop_id,address')->whereHas('deliveryZone')
-			->where([
-				['open', 1],
-				['status', 'approved'],
-			])
-			->find($id);
 
-		if (empty($shop?->deliveryZone)) {
-			return $this->onErrorResponse([
-				'code'    => ResponseError::ERROR_404,
-				'message' => __('errors.' . ResponseError::SHOP_OR_DELIVERY_ZONE, locale: $this->language)
-			]);
+
+		$requestedZipCode = $request->input('address.zip_code');
+    	$requestedCity = $request->input('address.city');
+
+    // Check if the requested zip code or city exists in the shop_delivery_zipcodes table for the given shop ID
+    $locationExists = ShopDeliveryZipcode::where('shop_id', $id)
+        ->where(function ($query) use ($requestedZipCode, $requestedCity) {
+            $query->where('zip_code', $requestedZipCode)
+                  ->orWhere('city', $requestedCity);
+        })
+        ->exists();
+	
+		// If the zip code exists, return success response
+		if ($locationExists) {
+			return $this->successResponse('success', 'Zip code matched successfully');
 		}
-
-		$check = Utility::pointInPolygon($request->input('address'), $shop?->deliveryZone->address);
-
-		if ($check) {
-			return $this->successResponse('success');
-		}
-
+	
+		// If the zip code does not exist, return error response
 		return $this->onErrorResponse([
 			'code'    => ResponseError::ERROR_400,
-			'message' => __('errors.' . ResponseError::NOT_IN_POLYGON, locale: $this->language)
+			'message' => __('errors.' . ResponseError::ERROR_400, locale: $this->language)
 		]);
+		// /** @var Shop $shop */
+		// $shop = Shop::with('deliveryZone:id,shop_id,address')->whereHas('deliveryZone')
+		// 	->where([
+		// 		['open', 1],
+		// 		['status', 'approved'],
+		// 	])
+		// 	->find($id);
+
+		// if (empty($shop?->deliveryZone)) {
+		// 	return $this->onErrorResponse([
+		// 		'code'    => ResponseError::ERROR_404,
+		// 		'message' => __('errors.' . ResponseError::SHOP_OR_DELIVERY_ZONE, locale: $this->language)
+		// 	]);
+		// }
+
+		// $check = Utility::pointInPolygon($request->input('address'), $shop?->deliveryZone->address);
+
+		// if ($check) {
+		// 	return $this->successResponse('success');
+		// }
+
+		// return $this->onErrorResponse([
+		// 	'code'    => ResponseError::ERROR_400,
+		// 	'message' => __('errors.' . ResponseError::NOT_IN_POLYGON, locale: $this->language)
+		// ]);
 	}
 
 }
