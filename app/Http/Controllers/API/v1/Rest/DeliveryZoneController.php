@@ -93,8 +93,7 @@ class DeliveryZoneController extends RestBaseController
 		$requestedCity = $request->input('address.city');
 
 		// Check if the requested zip code exists in the shop_delivery_zipcodes table
-		$locationExists = ShopDeliveryZipcode::where('zip_code', $requestedZipCode)
-        ->orWhere('city', $requestedCity)
+		$locationExists = ShopDeliveryZipcode::where('city', $requestedCity)
         ->exists();
 	
 		// If the zip code exists, return success response
