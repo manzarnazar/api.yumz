@@ -272,7 +272,7 @@ class CartRepository extends CoreRepository
 
 		$tips = data_get($data, 'tips', 0);
 
-		$totalPrice = max($totalPrice + $deliveryFee + $shopTax + $serviceFee + $tips, 0);
+		$totalPrice = max($totalPrice + $deliveryFee + $serviceFee + $tips, 0);
 
         return [
             'status' => true,
