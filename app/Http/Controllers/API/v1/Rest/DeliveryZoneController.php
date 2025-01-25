@@ -90,7 +90,7 @@ class DeliveryZoneController extends RestBaseController
 	public function checkDistance(CheckDistanceRequest $request): JsonResponse
 	{
 		$requestedZipCode = $request->input('address.zip_code');
-		$requestedCity = $request->input('address.city');
+		$requestedCity = $request->input('city');
 
 		$locationExists = ShopDeliveryZipcode::where('city', $requestedCity)
         ->exists();
