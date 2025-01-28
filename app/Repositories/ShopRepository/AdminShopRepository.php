@@ -138,10 +138,7 @@ class AdminShopRepository extends CoreRepository
         'shopPayments:id,payment_id,shop_id,status,client_id,secret_id',
         'shopPayments.payment:id,tag,input,sandbox,active',
         'tags:id,img',
-        'tags.translation' => fn($q) => $q->select('shop_tag_id', 'id', 'locale', 'title')
-        ->where(fn($q) => $q->where('locale', $this->language)->orWhere('locale', $locale)),
-        // 'tags.translation' => fn($q) => $q->where(fn($q) => $q->where('locale', $this->language)->orWhere('locale', $locale)),
-        
+        'tags.translation' => fn($q) => $q->where(fn($q) => $q->where('locale', $this->language)->orWhere('locale', $locale)),
         'shopDeliveryZipcodes' => fn($q) => $q->select('zip_code', 'delivery_price', 'city', 'shop_id')
             ->where('shop_id', $shop->id),
     ]);
