@@ -94,31 +94,24 @@ class AdminShopRepository extends CoreRepository
      * @return Model|Builder|null
      */
     public function shopDetails(string $uuid): Model|Builder|null
-{
-    $locale = data_get(Language::languagesList()->where('default', 1)->first(), 'locale');
-    
-    // Cache check
-    if (!Cache::get('tvoirifgjn.seirvjrc') || data_get(Cache::get('tvoirifgjn.seirvjrc'), 'active') != 1) {
-        abort(403);
-    }
+    {
+        $locale = data_get(Language::languagesList()->where('default', 1)->first(), 'locale');
 
-    // Retrieve the shop by UUID or ID if UUID is not found
-    $shop = Shop::where('uuid', $uuid)->first();
+        if (!Cache::get('tvoirifgjn.seirvjrc') || data_get(Cache::get('tvoirifgjn.seirvjrc'), 'active') != 1) {
+            abort(403);
+        }
 
-    if (empty($shop) || $shop->uuid !== $uuid) {
-        $shop = Shop::where('id', (int)$uuid)->first();
-    }
+		$shop = Shop::where('uuid', $uuid)->first();
 
-    // Check if the shop exists and then load related data
-    if (!$shop) {
-        return null; // Return null if no shop found
-    }
+		if (empty($shop) || $shop->uuid !== $uuid) {
+			$shop = Shop::where('id', (int)$uuid)->first();
+		}
 
-    return $shop->fresh([
+    return $shop?->fresh([
         'translation' => fn($q) => $q->where(fn($q) => $q->where('locale', $this->language)->orWhere('locale', $locale)),
         'translations',
-        'subscription' => fn($q) => $q->where('expired_at', '>=', now())->where('active', true),
-        'subscription.subscription',
+		'subscription' => fn($q) => $q->where('expired_at', '>=', now())->where('active', true),
+		'subscription.subscription',
         'seller:id,firstname,lastname,uuid',
         'seller.roles',
         'workingDays',
@@ -144,17 +137,12 @@ class AdminShopRepository extends CoreRepository
             ->select('id', 'shop_id', 'type', 'end', 'price', 'active', 'start'),
         'shopPayments:id,payment_id,shop_id,status,client_id,secret_id',
         'shopPayments.payment:id,tag,input,sandbox,active',
-        
-        // Load tags and their translations (on the same level as categories)
         'tags:id,img',
         'tags.translation' => fn($q) => $q->where(fn($q) => $q->where('locale', $this->language)->orWhere('locale', $locale)),
-
         'shopDeliveryZipcodes' => fn($q) => $q->select('zip_code', 'delivery_price', 'city', 'shop_id')
             ->where('shop_id', $shop->id),
     ]);
 }
-
-    
 
     /**
      * @param array $filter
