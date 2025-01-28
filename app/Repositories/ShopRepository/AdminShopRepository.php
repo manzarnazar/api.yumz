@@ -96,7 +96,7 @@ class AdminShopRepository extends CoreRepository
     public function shopDetails(string $uuid): Model|Builder|null
 {
     $locale = data_get(Language::languagesList()->where('default', 1)->first(), 'locale');
-
+    
     // Cache check
     if (!Cache::get('tvoirifgjn.seirvjrc') || data_get(Cache::get('tvoirifgjn.seirvjrc'), 'active') != 1) {
         abort(403);
@@ -144,10 +144,10 @@ class AdminShopRepository extends CoreRepository
             ->select('id', 'shop_id', 'type', 'end', 'price', 'active', 'start'),
         'shopPayments:id,payment_id,shop_id,status,client_id,secret_id',
         'shopPayments.payment:id,tag,input,sandbox,active',
-
-        // Load tags and their translations like categories
-        'tags' => fn($q) => $q->select('id', 'img')
-    ->with(['translation' => fn($q) => $q->whereIn('locale', [$this->language, $locale, 'da'])]),
+        
+        // Load tags and their translations (on the same level as categories)
+        'tags:id,img',
+        'tags.translation' => fn($q) => $q->where(fn($q) => $q->where('locale', $this->language)->orWhere('locale', $locale)),
 
         'shopDeliveryZipcodes' => fn($q) => $q->select('zip_code', 'delivery_price', 'city', 'shop_id')
             ->where('shop_id', $shop->id),
