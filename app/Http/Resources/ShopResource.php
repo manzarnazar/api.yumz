@@ -70,7 +70,8 @@ class ShopResource extends JsonResource
                 'longitude'     => data_get($this->location, 'longitude'),
             ]),
             'products_count'    => $this->whenLoaded('products', $this->products_count, 0),
-            'tags'              => TagResource::collection($this->whenLoaded('tags')), // Add this line for tags
+            'translation'       => TranslationResource::make($this->whenLoaded('translation')),
+($this->whenLoaded('tags')),
             'translations'      => TranslationResource::collection($this->whenLoaded('translations')),
             'locales'           => $this->when($locales, $locales),
             'seller'            => UserResource::make($this->whenLoaded('seller')),
