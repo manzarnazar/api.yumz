@@ -147,8 +147,7 @@ class AdminShopRepository extends CoreRepository
 
         // Load tags and their translations like categories
         'tags' => fn($q) => $q->select('id', 'img')
-            ->with(['translation' => fn($q) => $q->where(fn($q) => $q->where('locale', $this->language)->orWhere('locale', $locale))
-                ->select('id', 'locale', 'title')]),
+    ->with(['translation' => fn($q) => $q->whereIn('locale', [$this->language, $locale, 'da'])]),
 
         'shopDeliveryZipcodes' => fn($q) => $q->select('zip_code', 'delivery_price', 'city', 'shop_id')
             ->where('shop_id', $shop->id),
