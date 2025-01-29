@@ -93,7 +93,7 @@ class OrderService extends CoreService implements OrderServiceInterface
 	 */
 	public function create(array $data): array
 	{
-		// $data["address"]["address"]= $data['city'];
+		$data['city']= $data['city'];
 
 		$checkPhoneIfRequired = $this->checkPhoneIfRequired($data);
 
