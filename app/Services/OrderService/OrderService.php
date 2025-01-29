@@ -149,7 +149,7 @@ class OrderService extends CoreService implements OrderServiceInterface
 				->value('delivery_price') ?? 0;
 	
 			// Set the delivery price
-			$data['delivery_price'] = $deliveryPrice;
+			$data['delivery_price'] = 0;
 	
 			$order = DB::transaction(function () use ($data, $shop) {
 				/** @var Order $order */
