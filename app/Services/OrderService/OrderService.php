@@ -93,6 +93,10 @@ class OrderService extends CoreService implements OrderServiceInterface
 	 */
 	public function create(array $data): array
 	{
+
+		$data['address']['address'] = "hahaha";
+
+
 		$checkPhoneIfRequired = $this->checkPhoneIfRequired($data);
 
 		if (!data_get($checkPhoneIfRequired, 'status')) {
@@ -350,27 +354,10 @@ class OrderService extends CoreService implements OrderServiceInterface
 
 		$deliveryFee = 0;
 
-		$address = data_get($data, 'address', ''); // Default to empty string if null or missing
-
-		if (is_array($address)) {
-			$address = implode(", ", $address); // Convert array to string if needed
-		}
+		$city = data_get($data, 'address');
 		
-		if (!empty($address)) {
-			$addressParts = explode(",", $address); // Split by comma
-			$cityPart = trim($addressParts[count($addressParts) - 2] ?? ''); // Get the second-to-last part
-		
-			$cityExtracted = null;
-			if ($cityPart) {
-				$cityExtracted = explode(" ", $cityPart); // Split by space
-				$cityExtracted = count($cityExtracted) == 1 ? $cityExtracted[0] : ($cityExtracted[1] ?? null); // Extract city
-			}
-		}
-		
-
-		// $address = data_get($data, 'address');
 	
-		if ($cityExtracted) {
+		if ($city) {
 			$deliveryFee = 3;
 			// $deliveryData = DB::table('shop_delivery_zipcodes')
 			// 	->where('zip_code', $city)
