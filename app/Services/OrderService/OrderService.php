@@ -350,15 +350,23 @@ class OrderService extends CoreService implements OrderServiceInterface
 
 		$deliveryFee = 0;
 
-		$address = data_get($data, 'address');
-		$addressParts = explode(",", $address); // Split by comma
-		$cityPart = trim($addressParts[count($addressParts) - 2] ?? ''); // Get the second-to-last part and trim it
-		
-		$cityExtracted = null;
-		if ($cityPart) {
-			$cityExtracted = explode(" ", $cityPart); // Split by space
-			$cityExtracted = count($cityExtracted) == 1 ? $cityExtracted[0] : $cityExtracted[1] ?? null; // Get city name
+		$address = data_get($data, 'address', ''); // Default to empty string if null or missing
+
+		if (is_array($address)) {
+			$address = implode(", ", $address); // Convert array to string if needed
 		}
+		
+		if (!empty($address)) {
+			$addressParts = explode(",", $address); // Split by comma
+			$cityPart = trim($addressParts[count($addressParts) - 2] ?? ''); // Get the second-to-last part
+		
+			$cityExtracted = null;
+			if ($cityPart) {
+				$cityExtracted = explode(" ", $cityPart); // Split by space
+				$cityExtracted = count($cityExtracted) == 1 ? $cityExtracted[0] : ($cityExtracted[1] ?? null); // Extract city
+			}
+		}
+		
 
 		// $address = data_get($data, 'address');
 	
