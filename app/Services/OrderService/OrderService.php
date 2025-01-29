@@ -350,9 +350,19 @@ class OrderService extends CoreService implements OrderServiceInterface
 
 		$deliveryFee = 0;
 
-		$city = data_get($data, 'address');
+		$address = data_get($data, 'address');
+		$addressParts = explode(",", $address); // Split by comma
+		$cityPart = trim($addressParts[count($addressParts) - 2] ?? ''); // Get the second-to-last part and trim it
+		
+		$cityExtracted = null;
+		if ($cityPart) {
+			$cityExtracted = explode(" ", $cityPart); // Split by space
+			$cityExtracted = count($cityExtracted) == 1 ? $cityExtracted[0] : $cityExtracted[1] ?? null; // Get city name
+		}
+
+		// $address = data_get($data, 'address');
 	
-		if ($city) {
+		if ($cityExtracted) {
 			$deliveryFee = 2;
 			// $deliveryData = DB::table('shop_delivery_zipcodes')
 			// 	->where('zip_code', $city)
