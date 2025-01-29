@@ -94,33 +94,39 @@ class OrderService extends CoreService implements OrderServiceInterface
 	public function create(array $data): array
 	{
 		$checkPhoneIfRequired = $this->checkPhoneIfRequired($data);
-	
+
 		if (!data_get($checkPhoneIfRequired, 'status')) {
 			return $checkPhoneIfRequired;
 		}
-	
+
 		/** @var Shop $shop */
 		$shop = Shop::find(data_get($data, 'shop_id'));
-	
+
 		if (data_get($data, 'table_id') && !$shop?->new_order_after_payment) {
+
 			$order = Order::with([
 				'transaction' => fn($q) => $q->where('status', Transaction::STATUS_SPLIT)
 			])
-			->when($shop?->order_payment === 'before',
-				fn($q) => $q->where('status', '!=', Order::STATUS_DELIVERED),
-				fn($q) => $q->whereDoesntHave('transaction', fn($q) => $q
-					->where('type', Transaction::TYPE_MODEL)
-					->whereNull('parent_id')
-					->where('status', Transaction::STATUS_PAID)
-				),
-			)
-			->select(['id', 'status', 'table_id'])
-			->where('status', '!=', Order::STATUS_DELIVERED)
-			->where('table_id', $data['table_id'])
-			->first();
-	
+				->when($shop?->order_payment === 'before',
+					fn($q) => $q->where('status', '!=', Order::STATUS_DELIVERED),
+					fn($q) => $q->whereDoesntHave('transaction', fn($q) => $q
+						->where('type', Transaction::TYPE_MODEL)
+						->whereNull('parent_id')
+						->where('status', Transaction::STATUS_PAID)
+					),
+				)
+				->select([
+					'id',
+					'status',
+					'table_id'
+				])
+				->where('status', '!=', Order::STATUS_DELIVERED)
+				->where( 'table_id', $data['table_id'])
+				->first();
+
 			if (!empty($order)) {
 				/** @var Order $order */
+
 				if ($order->transaction?->status === Transaction::STATUS_SPLIT) {
 					return [
 						'status'  => false,
@@ -128,12 +134,14 @@ class OrderService extends CoreService implements OrderServiceInterface
 						'message' => __('errors.' . ResponseError::WAIT_SPLIT),
 					];
 				}
-	
+
 				return $this->update($order->id, $data);
 			}
+
 		}
-	
+
 		try {
+
 			if (isset($data['cart_id']) && Order::where('cart_id', $data['cart_id'])->exists()) {
 				return [
 					'status'  => false,
@@ -141,62 +149,56 @@ class OrderService extends CoreService implements OrderServiceInterface
 					'code'    => ResponseError::ERROR_501,
 				];
 			}
-	
-			// Fetch delivery price based on city
-			$city = data_get($data, 'city'); // Assuming 'city' is passed in request
-			$deliveryPrice = DB::table('shop_delivery_zipcodes')
-				->where('city', $city)
-				->value('delivery_price') ?? 0;
-	
-			// Set the delivery price
-			$data['delivery_price'] = 0;
-	
+
 			$order = DB::transaction(function () use ($data, $shop) {
+
 				/** @var Order $order */
 				$order = $this->model()->updateOrCreate($this->setOrderParams($data, $shop));
-	
+
 				if (data_get($data, 'images.0')) {
 					$order->update(['img' => data_get($data, 'images.0')]);
 					$order->uploads(data_get($data, 'images'));
 				}
-	
+
 				if (data_get($data, 'cart_id')) {
 					$order = (new OrderDetailService)->createOrderUser($order, data_get($data, 'cart_id', 0), data_get($data, 'notes', []));
 				} else {
 					$order = (new OrderDetailService)->create($order, data_get($data, 'products', []));
 				}
-	
+
 				$this->calculateOrder($order, $shop, $data);
-	
+
 				if (data_get($data, 'payment_id') && !data_get($data, 'split')) {
+
 					$data['payment_sys_id'] = data_get($data, 'payment_id');
-	
+
 					$result = (new TransactionService)->orderTransaction($order->id, $data);
-	
+
 					if (!data_get($result, 'status')) {
 						throw new Exception(data_get($result, 'message'));
 					}
+
 				}
-	
+
 				if (in_array($order->status, $order->shop?->email_statuses ?? []) && ($order->email || $order->user?->email)) {
 					(new EmailSendService)->sendOrder($order);
 				}
-	
+
 				return $order;
 			});
-	
-			$order = $order->fresh($this->with());
-	
-			$this->newOrderNotification($order);
-	
-			if ((int)data_get(Settings::where('key', 'order_auto_approved')->first(), 'value') === 1) {
-				(new NotificationHelper)->autoAcceptNotification(
-					$order,
-					$this->language,
-					Order::STATUS_ACCEPTED
-				);
-			}
-	
+
+            $order = $order->fresh($this->with());
+
+            $this->newOrderNotification($order);
+
+            if ((int)data_get(Settings::where('key', 'order_auto_approved')->first(), 'value') === 1) {
+                (new NotificationHelper)->autoAcceptNotification(
+                    $order,
+                    $this->language,
+                    Order::STATUS_ACCEPTED
+                );
+            }
+
 			return [
 				'status'  => true,
 				'message' => ResponseError::NO_ERROR,
@@ -204,7 +206,7 @@ class OrderService extends CoreService implements OrderServiceInterface
 			];
 		} catch (Throwable $e) {
 			$this->error($e);
-	
+
 			return [
 				'status'    => false,
 				'message'   => $e->getMessage() . $e->getFile() . $e->getLine(),
@@ -212,7 +214,7 @@ class OrderService extends CoreService implements OrderServiceInterface
 			];
 		}
 	}
-	
+
 	/**
 	 * @param int $id
 	 * @param array $data
@@ -344,7 +346,7 @@ class OrderService extends CoreService implements OrderServiceInterface
 
 		$coupon = Coupon::checkCoupon(data_get($data, 'coupon'), $order->shop_id)->first();
 
-		$deliveryFee = $order->delivery_fee;
+		$deliveryFee = 0;
 
 		if ($coupon?->for === 'delivery_fee') {
 
