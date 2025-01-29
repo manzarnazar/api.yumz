@@ -94,9 +94,6 @@ class OrderService extends CoreService implements OrderServiceInterface
 	public function create(array $data): array
 	{
 
-		$data['address']['address'] = $data['zip_code'];
-
-
 		$checkPhoneIfRequired = $this->checkPhoneIfRequired($data);
 
 		if (!data_get($checkPhoneIfRequired, 'status')) {
