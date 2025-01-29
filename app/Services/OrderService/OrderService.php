@@ -355,9 +355,9 @@ class OrderService extends CoreService implements OrderServiceInterface
 		
 	
 		if ($city) {
-			// $deliveryFee = 3;
+
 			$deliveryData = DB::table('shop_delivery_zipcodes')
-				->where('zip_code', $city)
+				->where('city', $city)
 				->first();
 	
 			if ($deliveryData) {
