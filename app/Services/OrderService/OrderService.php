@@ -349,7 +349,6 @@ class OrderService extends CoreService implements OrderServiceInterface
 
 		$deliveryFee = $order->delivery_fee;
 
-		$deliveryFee = 0;
 
 		$city = data_get($data, 'address');
 		
