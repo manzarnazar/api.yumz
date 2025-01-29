@@ -93,8 +93,6 @@ class OrderService extends CoreService implements OrderServiceInterface
 	 */
 	public function create(array $data): array
 	{
-		// $data["address"]["address"]= $data['city'];
-
 		$checkPhoneIfRequired = $this->checkPhoneIfRequired($data);
 
 		if (!data_get($checkPhoneIfRequired, 'status')) {
@@ -349,23 +347,6 @@ class OrderService extends CoreService implements OrderServiceInterface
 		$coupon = Coupon::checkCoupon(data_get($data, 'coupon'), $order->shop_id)->first();
 
 		$deliveryFee = $order->delivery_fee;
-
-		$deliveryFee = 0;
-
-		$city = data_get($data, 'city');
-		
-	
-		if ($city) {
-
-			$deliveryData = DB::table('shop_delivery_zipcodes')
-				->where('city', $city)
-				->first();
-	
-			if ($deliveryData) {
-				$deliveryFee = $deliveryData->delivery_price;
-			}
-		}
-	
 
 		if ($coupon?->for === 'delivery_fee') {
 
