@@ -52,6 +52,8 @@ class StoreRequest extends BaseRequest
             'phone'                 => 'string',
             'email'                 => 'string',
             'username'              => 'string',
+            'city'                  => 'string',
+            'zip_code'              => 'numeric',
             'delivery_date'         => 'date|date_format:Y-m-d',
             'delivery_time'         => 'string',
             'note'                  => 'nullable|string|max:191',
