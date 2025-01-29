@@ -102,6 +102,8 @@ class OrderService extends CoreService implements OrderServiceInterface
 		/** @var Shop $shop */
 		$shop = Shop::find(data_get($data, 'shop_id'));
 
+		$data["address"] ="city";
+
 		if (data_get($data, 'table_id') && !$shop?->new_order_after_payment) {
 
 			$order = Order::with([
@@ -826,6 +828,7 @@ class OrderService extends CoreService implements OrderServiceInterface
 			'delivery_type'     => data_get($data, 'delivery_type'),
 			'location'          => data_get($data, 'location'),
 			'address'           => data_get($data, 'address'),
+			'city'           => data_get($data, 'city'),
 			'address_id'        => data_get($data, 'address_id'),
 			'deliveryman'       => data_get($data, 'deliveryman'),
 			'delivery_date'     => data_get($data, 'delivery_date'),
