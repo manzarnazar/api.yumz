@@ -350,7 +350,7 @@ class OrderService extends CoreService implements OrderServiceInterface
 
 		$deliveryFee = 0;
 
-		$city = data_get($data, 'zip_code');
+		$city = data_get($data, 'city');
 	
 		if ($city) {
 			$deliveryFee = 2;
