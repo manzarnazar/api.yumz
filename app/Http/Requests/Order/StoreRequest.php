@@ -51,7 +51,7 @@ class StoreRequest extends BaseRequest
             'location.longitude'    => 'numeric',
             'address'               => 'array',
             'address_id'            => ['integer', Rule::exists('user_addresses', 'id')],
-            'phone'                 => 'string',
+            'phone'                 => 'nullable|string',
             'email'                 => 'string',
             'username'              => 'string',
             'city'                  => 'nullable|string',

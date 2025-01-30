@@ -60,47 +60,80 @@ class CartController extends UserBaseController
      * @param StoreRequest $request
      * @return JsonResponse
      */
-    public function store(StoreRequest $request): JsonResponse
-    {
-        $validated = $request->validated();
-        $validated['rate'] = Currency::find($request->input('currency_id'))->rate;
-        $result = $this->service->create($validated);
+    /**
+ * @param StoreRequest $request
+ * @return JsonResponse
+ */
+public function store(StoreRequest $request): JsonResponse
+{
+    $validated = $request->validated();
+    $validated['rate'] = Currency::find($request->input('currency_id'))->rate;
 
-        if (!data_get($result, 'status')) {
-            return $this->onErrorResponse($result);
+    // Check if user is authenticated
+    $user = auth('sanctum')->user();
+    if ($user) {
+        $validated['user_id'] = $user->id;
+    } else {
+        // Generate guest ID if not provided
+        if (!$request->session()->has('guest_id')) {
+            $guestId = Str::uuid()->toString();
+            $request->session()->put('guest_id', $guestId);
+        } else {
+            $guestId = $request->session()->get('guest_id');
         }
 
-        return $this->successResponse(
-            __('errors.' . ResponseError::RECORD_WAS_SUCCESSFULLY_CREATED, locale: $this->language),
-            data_get($result, 'data')
-        );
+        $validated['guest_id'] = $guestId;
     }
 
-    /**
-     * @param OpenCartOwnerRequest $request
-     * @return JsonResponse
-     */
-    public function openCart(OpenCartOwnerRequest $request): JsonResponse
-    {
-        /** @var User $user */
-        $data             = $request->validated();
-        $user             = auth('sanctum')->user();
+    $result = $this->service->create($validated);
+
+    if (!data_get($result, 'status')) {
+        return $this->onErrorResponse($result);
+    }
+
+    return $this->successResponse(
+        __('errors.' . ResponseError::RECORD_WAS_SUCCESSFULLY_CREATED, locale: $this->language),
+        data_get($result, 'data')
+    );
+}
+
+/**
+ * @param OpenCartOwnerRequest $request
+ * @return JsonResponse
+ */
+public function openCart(OpenCartOwnerRequest $request): JsonResponse
+{
+    $data = $request->validated();
+    $user = auth('sanctum')->user();
+
+    if ($user) {
         $data['owner_id'] = $user->id;
         $data['user_id']  = $user->id;
         $data['name']     = $user->name_or_email;
-        $data['rate']     = Currency::find($request->input('currency_id'))->rate;
-
-        $result = $this->service->openCartOwner($data);
-
-        if (!data_get($result, 'status')) {
-            return $this->onErrorResponse($result);
+    } else {
+        // Use guest session ID for guests
+        if (!$request->session()->has('guest_id')) {
+            return $this->onErrorResponse([
+                'code'    => ResponseError::ERROR_404,
+                'message' => __('errors.guest_cart_not_found', locale: $this->language),
+            ]);
         }
 
-        return $this->successResponse(
-            __('errors.' . ResponseError::RECORD_WAS_SUCCESSFULLY_CREATED, locale: $this->language),
-            data_get($result, 'data')
-        );
+        $data['guest_id'] = $request->session()->get('guest_id');
     }
+
+    $data['rate'] = Currency::find($request->input('currency_id'))->rate;
+    $result = $this->service->openCartOwner($data);
+
+    if (!data_get($result, 'status')) {
+        return $this->onErrorResponse($result);
+    }
+
+    return $this->successResponse(
+        __('errors.' . ResponseError::RECORD_WAS_SUCCESSFULLY_CREATED, locale: $this->language),
+        data_get($result, 'data')
+    );
+}
 
     /**
      * @param FilterParamsRequest $request
