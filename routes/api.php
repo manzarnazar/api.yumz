@@ -324,6 +324,19 @@ Route::group(['prefix' => 'v1', 'middleware' => ['block.ip']], function () {
         Route::post('notifications/{id}/read-at',   [PushNotificationController::class, 'readAt']);
         Route::post('notifications/read-all',       [PushNotificationController::class, 'readAll']);
 
+           /* Carts */
+           Route::post('cart',                        			[User\CartController::class, 'store']);
+           Route::post('cart/insert-product',         			[User\CartController::class, 'insertProducts']);
+           Route::post('cart/open',                   			[User\CartController::class, 'openCart']);
+           Route::post('cart/set-group/{id}',         			[User\CartController::class, 'setGroup']);
+           Route::delete('cart/delete',               			[User\CartController::class, 'delete']);
+           Route::delete('cart/my-delete',            			[User\CartController::class, 'myDelete']);
+           Route::delete('cart/product/delete',       			[User\CartController::class, 'cartProductDelete']);
+           Route::delete('cart/member/delete',        			[User\CartController::class, 'userCartDelete']);
+           Route::get('cart',                         			[User\CartController::class, 'get']);
+           Route::post('cart/status/{user_cart_uuid}',			[User\CartController::class, 'statusChange']);
+           Route::post('cart/calculate/{id}',         			[User\CartController::class, 'cartCalculate']);
+
         // USER BLOCK
         Route::group(['prefix' => 'user', 'middleware' => ['sanctum.check'], 'as' => 'user.'], function () {
             Route::get('profile/show',                          [User\ProfileController::class, 'show']);
