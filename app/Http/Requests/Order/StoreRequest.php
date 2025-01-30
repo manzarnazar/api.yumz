@@ -17,10 +17,12 @@ class StoreRequest extends BaseRequest
     {
         return [
             'user_id'               => [
+                'nullable', // Change from required to nullable to allow guest users
                 'integer',
                 Rule::exists('users', 'id')->whereNull('deleted_at')
             ],
             'waiter_id'             => [
+                'nullable',
                 'integer',
                 Rule::exists('users', 'id')->whereNull('deleted_at')
             ],

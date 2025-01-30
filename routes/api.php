@@ -133,6 +133,8 @@ Route::group(['prefix' => 'v1', 'middleware' => ['block.ip']], function () {
         Route::get('landing-pages/{type}',          [Rest\LandingPageController::class, 'show']);
 
         /* Shops */
+		// Route::get('guestorder',   [Rest\ShopController::class, 'guestorder']);
+
 		Route::get('branch/recommended/products',   [Rest\ShopController::class, 'productsRecPaginate']);
 		Route::get('shops/recommended',             [Rest\ShopController::class, 'recommended']);
         Route::get('shops/paginate',                [Rest\ShopController::class, 'paginate']);
