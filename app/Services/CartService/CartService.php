@@ -642,14 +642,14 @@ class CartService extends CoreService
         /** @var UserCart $userCart */
 
 		/** @var User $user */
-		$user = auth('sanctum')->user();
+		// $user = auth('sanctum')->user();
 
-		if (!empty(data_get($data, 'user_id')) && $user && $user->hasRole(['admin', 'seller'])) {
-			$user = User::find(data_get($data, 'user_id'));
-		}
+		// if (!empty(data_get($data, 'user_id')) && $user && $user->hasRole(['admin', 'seller'])) {
+		// 	$user = User::find(data_get($data, 'user_id'));
+		// }
 
         $userCart = $cart->userCarts()->firstOrCreate([
-            'user_id' => $user->id,
+            'user_id' => 432,
             'cart_id' => $cart->id,
         ], [
             'uuid'    => Str::uuid()
