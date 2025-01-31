@@ -20,7 +20,7 @@ class RestInsertProductsRequest extends BaseRequest
                 'integer',
                 Rule::exists('shops', 'id')->whereNull('deleted_at')
             ],
-            'user_cart_uuid'        => 'required|string|exists:user_carts,uuid',
+            'user_cart_uuid'        => 'nullable|string|',
             'products'              => 'required|array',
             'products.*.stock_id'   => [
                 'required',
