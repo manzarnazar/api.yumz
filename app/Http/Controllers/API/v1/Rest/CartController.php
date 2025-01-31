@@ -125,7 +125,7 @@ class CartController extends RestBaseController
             // Create the cart if not exists
             $cart = TestCart::firstOrCreate([
                 'shop_id' => $validated['shop_id'],
-                'guest_id' => $validated['guest_id'],
+                'owner_id' => $validated['guest_id'],
                 'status' => 1, // Assuming 1 means active or not completed
             ]);
     
