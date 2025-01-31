@@ -54,8 +54,7 @@ Route::group(['prefix' => 'v1', 'middleware' => ['block.ip']], function () {
 
     Route::post('/auth/forgot/email-password/{hash}',   [LoginController::class, 'forgetPasswordVerifyEmail'])
         ->middleware('sessions');
-        
-        Route::post('cart/addproduct', [Rest\CartController::class, 'addProduct']);
+
 //    Route::get('/login/{provider}',                 [LoginController::class,'redirectToProvider']);
     Route::post('/auth/{provider}/callback',        [LoginController::class, 'handleProviderCallback']);
 
