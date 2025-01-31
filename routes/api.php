@@ -196,11 +196,10 @@ Route::group(['prefix' => 'v1', 'middleware' => ['block.ip']], function () {
 
         Route::get('policy',                        [Rest\FAQController::class, 'policy']);
 
-        Route::post('cart/insert-product',         			[User\CartController::class, 'insertProducts']);
         /* Carts */
         Route::post('cart',                         [Rest\CartController::class, 'store']);
         Route::get('cart/{id}',                     [Rest\CartController::class, 'get']);
-        // Route::post('cart/insert-product',          [Rest\CartController::class, 'insertProducts']);
+        Route::post('cart/insert-product',          [Rest\CartController::class, 'insertProducts']);
         Route::post('cart/open',                    [Rest\CartController::class, 'openCart']);
         Route::delete('cart/product/delete',        [Rest\CartController::class, 'cartProductDelete']);
         Route::delete('cart/member/delete',         [Rest\CartController::class, 'userCartDelete']);
@@ -382,7 +381,7 @@ Route::group(['prefix' => 'v1', 'middleware' => ['block.ip']], function () {
 
             /* Carts */
             Route::post('cart',                        			[User\CartController::class, 'store']);
-            // Route::post('cart/insert-product',         			[User\CartController::class, 'insertProducts']);
+            Route::post('cart/insert-product',         			[User\CartController::class, 'insertProducts']);
             Route::post('cart/open',                   			[User\CartController::class, 'openCart']);
             Route::post('cart/set-group/{id}',         			[User\CartController::class, 'setGroup']);
             Route::delete('cart/delete',               			[User\CartController::class, 'delete']);

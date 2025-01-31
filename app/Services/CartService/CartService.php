@@ -592,28 +592,28 @@ class CartService extends CoreService
     public function insertProducts(array $data): array
     {
         /** @var User $user */
-		// $user = auth('sanctum')->user();
+		$user = auth('sanctum')->user();
 
-		// if (!empty(data_get($data, 'user_id')) && $user && $user->hasRole(['admin', 'seller'])) {
-		// 	$user = User::find(data_get($data, 'user_id'));
-		// }
+		if (!empty(data_get($data, 'user_id')) && $user && $user->hasRole(['admin', 'seller'])) {
+			$user = User::find(data_get($data, 'user_id'));
+		}
 
-        // $userId           = $user?->id;
+        $userId           = $user?->id;
 
-        // $data['owner_id'] = $userId;
-        $data['user_id']  = 423;
+        $data['owner_id'] = $userId;
+        $data['user_id']  = $userId;
         $data['rate']     = Currency::find($data['currency_id'])->rate;
 
-        // /** @var Cart $exist */
-        // $exist = $this->model()->select(['id', 'shop_id', 'owner_id'])->where('owner_id', $userId)->first();
+        /** @var Cart $exist */
+        $exist = $this->model()->select(['id', 'shop_id', 'owner_id'])->where('owner_id', $userId)->first();
 
-        // if ($exist && $exist->shop_id !== data_get($data, 'shop_id')) {
-        //     return [
-        //         'status'  => false,
-        //         'code'    => ResponseError::ERROR_440,
-        //         'message' => __('errors.' . ResponseError::OTHER_SHOP, locale: $this->language)
-        //     ];
-        // }
+        if ($exist && $exist->shop_id !== data_get($data, 'shop_id')) {
+            return [
+                'status'  => false,
+                'code'    => ResponseError::ERROR_440,
+                'message' => __('errors.' . ResponseError::OTHER_SHOP, locale: $this->language)
+            ];
+        }
 
         $cart = $this->model()->with([
             'shop',
@@ -625,7 +625,7 @@ class CartService extends CoreService
             'userCarts.cartDetails.children.stock.countable:id,status,shop_id,active,min_qty,max_qty,tax,img,interval',
         ])
             ->firstOrCreate([
-                'owner_id'  => 432,
+                'owner_id'  => $userId,
                 'shop_id'   => data_get($data, 'shop_id', 0)
             ], $data);
 
@@ -642,14 +642,14 @@ class CartService extends CoreService
         /** @var UserCart $userCart */
 
 		/** @var User $user */
-		// $user = auth('sanctum')->user();
+		$user = auth('sanctum')->user();
 
-		// if (!empty(data_get($data, 'user_id')) && $user && $user->hasRole(['admin', 'seller'])) {
-		// 	$user = User::find(data_get($data, 'user_id'));
-		// }
+		if (!empty(data_get($data, 'user_id')) && $user && $user->hasRole(['admin', 'seller'])) {
+			$user = User::find(data_get($data, 'user_id'));
+		}
 
         $userCart = $cart->userCarts()->firstOrCreate([
-            'user_id' => 432,
+            'user_id' => $user->id,
             'cart_id' => $cart->id,
         ], [
             'uuid'    => Str::uuid()
