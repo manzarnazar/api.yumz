@@ -590,83 +590,75 @@ class CartService extends CoreService
      * @return array
      */
     public function insertProducts(array $data): array
-{
-    // Set userId and shopId from the incoming data, assuming that data includes these fields
-    $userId = data_get($data, 'user_id', null);
-    $shopId = data_get($data, 'shop_id', 0);
-    
-    // Check if userId is provided and valid
-    if (!$userId) {
-        return [
-            'status' => false,
-            'code' => ResponseError::ERROR_400,
-            'message' => __('errors.missing_user_id', locale: $this->language)
-        ];
+    {
+        /** @var User $user */
+		$user = auth('sanctum')->user();
+
+		if (!empty(data_get($data, 'user_id')) && $user && $user->hasRole(['admin', 'seller'])) {
+			$user = User::find(data_get($data, 'user_id'));
+		}
+
+        $userId           = $user?->id;
+
+        $data['owner_id'] = $userId;
+        $data['user_id']  = $userId;
+        $data['rate']     = Currency::find($data['currency_id'])->rate;
+
+        /** @var Cart $exist */
+        $exist = $this->model()->select(['id', 'shop_id', 'owner_id'])->where('owner_id', $userId)->first();
+
+        if ($exist && $exist->shop_id !== data_get($data, 'shop_id')) {
+            return [
+                'status'  => false,
+                'code'    => ResponseError::ERROR_440,
+                'message' => __('errors.' . ResponseError::OTHER_SHOP, locale: $this->language)
+            ];
+        }
+
+        $cart = $this->model()->with([
+            'shop',
+            'userCarts.cartDetails' => fn($q) => $q->whereNull('parent_id'),
+            'userCarts.cartDetails.stock.countable.discounts' => fn($q) => $q->where('start', '<=', today())
+                ->where('end', '>=', today())
+                ->where('active', 1),
+            'userCarts.cartDetails.stock.countable:id,status,shop_id,active,min_qty,max_qty,tax,img,interval',
+            'userCarts.cartDetails.children.stock.countable:id,status,shop_id,active,min_qty,max_qty,tax,img,interval',
+        ])
+            ->firstOrCreate([
+                'owner_id'  => $userId,
+                'shop_id'   => data_get($data, 'shop_id', 0)
+            ], $data);
+
+        return $this->cartDetailsUpdate($data, $cart);
     }
 
-    // Ensure the currency rate is included in the data
-    $data['rate'] = Currency::find($data['currency_id'])->rate;
+    /**
+     * @param array $data
+     * @param Cart $cart
+     * @return array
+     */
+    private function cartDetailsUpdate(array $data, Cart $cart): array
+    {
+        /** @var UserCart $userCart */
 
-    /** @var Cart $exist */
-    $exist = $this->model()->select(['id', 'shop_id', 'owner_id'])->where('owner_id', $userId)->first();
+		/** @var User $user */
+		$user = auth('sanctum')->user();
 
-    if ($exist && $exist->shop_id !== $shopId) {
-        return [
-            'status' => false,
-            'code' => ResponseError::ERROR_440,
-            'message' => __('errors.' . ResponseError::OTHER_SHOP, locale: $this->language)
-        ];
+		if (!empty(data_get($data, 'user_id')) && $user && $user->hasRole(['admin', 'seller'])) {
+			$user = User::find(data_get($data, 'user_id'));
+		}
+
+        $userCart = $cart->userCarts()->firstOrCreate([
+            'user_id' => $user->id,
+            'cart_id' => $cart->id,
+        ], [
+            'uuid'    => Str::uuid()
+        ]);
+
+        $cartId = $this->collectProducts($data, $cart, $userCart);
+
+        return $this->successReturn($cartId);
     }
-
-    // Create or get the existing cart without authentication
-    $cart = $this->model()->with([
-        'shop',
-        'userCarts.cartDetails' => fn($q) => $q->whereNull('parent_id'),
-        'userCarts.cartDetails.stock.countable.discounts' => fn($q) => $q->where('start', '<=', today())
-            ->where('end', '>=', today())
-            ->where('active', 1),
-        'userCarts.cartDetails.stock.countable:id,status,shop_id,active,min_qty,max_qty,tax,img,interval',
-        'userCarts.cartDetails.children.stock.countable:id,status,shop_id,active,min_qty,max_qty,tax,img,interval',
-    ])
-    ->firstOrCreate([
-        'owner_id' => $userId,
-        'shop_id' => $shopId
-    ], $data);
-
-    return $this->cartDetailsUpdate($data, $cart);
-}
-
-/**
- * @param array $data
- * @param Cart $cart
- * @return array
- */
-private function cartDetailsUpdate(array $data, Cart $cart): array
-{
-    /** @var UserCart $userCart */
-
-    // Extract userId from the incoming data
-    $userId = data_get($data, 'user_id', null);
-
-    if (!$userId) {
-        return [
-            'status' => false,
-            'code' => ResponseError::ERROR_400,
-            'message' => __('errors.missing_user_id', locale: $this->language)
-        ];
-    }
-
-    // Create or update the userCart without authentication
-    $userCart = $cart->userCarts()->firstOrCreate([
-        'cart_id' => $cart->id,
-    ]);
-
-    // Collect products and update cart details
-    $cartId = $this->collectProducts($data, $cart, $userCart);
-
-    return $this->successReturn($cartId);
-}
-
 
     /**
      * @param array $data
