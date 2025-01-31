@@ -85,13 +85,13 @@ class CartController extends RestBaseController
     public function insertProducts(RestInsertProductsRequest $request): JsonResponse
     
     {
-        $request['user_cart_uuid'] =Str::uuid();
-        if (empty($request->input('user_cart_uuid'))) {
-            return $this->onErrorResponse([
-                'code' => ResponseError::ERROR_400,
-                'message' => 'cart id is invalid'
-            ]);
-        }
+        // $request['user_cart_uuid'] =Str::uuid();
+        // if (empty($request->input('user_cart_uuid'))) {
+        //     return $this->onErrorResponse([
+        //         'code' => ResponseError::ERROR_400,
+        //         'message' => 'cart id is invalid'
+        //     ]);
+        // }
 
         $result = $this->cartService->groupInsertProducts($request->validated());
 
