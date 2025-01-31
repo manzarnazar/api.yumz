@@ -170,7 +170,7 @@ class CartController extends RestBaseController
 
         try {
             // Delete the product from the cart
-            CartDetail::where('cart_id', $validated['cart_id'])
+            TestCartDetail::where('cart_id', $validated['cart_id'])
                       ->where('stock_id', $validated['product_id'])
                       ->delete();
 
