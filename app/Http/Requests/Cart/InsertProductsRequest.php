@@ -27,7 +27,7 @@ class InsertProductsRequest extends BaseRequest
             ],
             'products'              => 'required|array',
             'products.*.stock_id'   =>  [
-                'required',
+                'nullable',
                 'integer',
                 Rule::exists('stocks', 'id')->whereNull('deleted_at')
             ],
