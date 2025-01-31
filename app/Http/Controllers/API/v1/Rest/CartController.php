@@ -84,6 +84,7 @@ class CartController extends RestBaseController
 
     public function insertProducts(RestInsertProductsRequest $request): JsonResponse
     {
+        $request['user_cart_uuid']="1f5ead6d-2395-4c22-809c-7ed4f164c6bf";
         if (empty($request->input('user_cart_uuid'))) {
             return $this->onErrorResponse([
                 'code' => ResponseError::ERROR_400,
