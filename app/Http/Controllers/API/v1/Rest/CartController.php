@@ -112,7 +112,7 @@ class CartController extends RestBaseController
             // Validate the incoming request
             $validated = $request->validate([
                 'shop_id' => 'required|exists:shops,id',
-                'guest_id' => 'required|exists:guests,id',
+                'guest_id' => 'required|numeric',
                 'products' => 'required|array',
                 'products.*.id' => 'required|exists:products,id',
                 'products.*.quantity' => 'required|integer|min:1',
