@@ -197,7 +197,7 @@ Route::group(['prefix' => 'v1', 'middleware' => ['block.ip']], function () {
         Route::get('policy',                        [Rest\FAQController::class, 'policy']);
 
         /* Carts */
-        Route::post('cart/addproduct',                         [Rest\CartController::class, 'addProduct']);
+        Route::post('cart/addproduct', [Rest\CartController::class, 'addProduct']);
         Route::post('cart',                         [Rest\CartController::class, 'store']);
         Route::get('cart/{id}',                     [Rest\CartController::class, 'get']);
         Route::post('cart/insert-product',          [Rest\CartController::class, 'insertProducts']);
