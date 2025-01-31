@@ -600,7 +600,7 @@ class CartService extends CoreService
 
         $userId           = $user?->id;
 
-        $data['owner_id'] = $userId;
+        // $data['owner_id'] = $userId;
         $data['user_id']  = $userId;
         $data['rate']     = Currency::find($data['currency_id'])->rate;
 
