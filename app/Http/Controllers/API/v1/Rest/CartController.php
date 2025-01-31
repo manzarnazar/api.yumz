@@ -9,6 +9,8 @@ use App\Http\Requests\Cart\OpenCartRequest;
 use App\Http\Requests\Cart\RestInsertProductsRequest;
 use App\Http\Requests\FilterParamsRequest;
 use App\Http\Resources\Cart\CartResource;
+use App\Models\TestCart;
+use App\Models\TestCartDetail;
 use App\Repositories\CartRepository\CartRepository;
 use App\Services\CartService\CartService;
 use Illuminate\Http\JsonResponse;
@@ -68,7 +70,7 @@ class CartController extends RestBaseController
         );
     }
 
-    public function store(GroupStoreRequest $request): JsonResponse
+    public function addProductstore(GroupStoreRequest $request): JsonResponse
     {
         $result = $this->cartService->groupCreate($request->validated());
 
@@ -101,6 +103,75 @@ class CartController extends RestBaseController
             __('errors.' . ResponseError::RECORD_WAS_SUCCESSFULLY_CREATED, locale: $this->language),
             data_get($result, 'data')
         );
+    }
+    
+    public function addProduct(Request $request)
+    {
+        \DB::beginTransaction();
+        try {
+            // Validate the incoming request
+            $validated = $request->validate([
+                'shop_id' => 'required|exists:shops,id',
+                'guest_id' => 'required|exists:guests,id',
+                'products' => 'required|array',
+                'products.*.id' => 'required|exists:products,id',
+                'products.*.quantity' => 'required|integer|min:1',
+            ]);
+
+            // Create the cart if not exists
+            $cart = TestCart::firstOrCreate([
+                'shop_id' => $validated['shop_id'],
+                'guest_id' => $validated['guest_id'],
+                'status' => 1,
+            ]);
+
+            foreach ($validated['products'] as $product) {
+                $productId = $product['id'];
+                $quantity = $product['quantity'];
+
+                // Insert into cart details
+                TestCartDetail::create([
+                    'cart_id' => $cart->id,
+                    'stock_id' => $product['stock']['id'],
+                    'quantity' => $quantity,
+                    'price' => $product['stock']['price'],
+                    'discount' => $product['stock']['total_price'] - $product['stock']['price'],
+                    'bonus' => $product['stock']['bonus'] ?? 0,
+                    'bonus_type' => $product['stock']['bonus'] ? 'percent' : null,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+
+            \DB::commit();
+            return response()->json(['message' => 'Products added to cart successfully.'], 201);
+
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    // Delete product from the cart
+    public function deleteProduct(Request $request)
+    {
+        // Validate the incoming request
+        $validated = $request->validate([
+            'cart_id' => 'required|exists:carts,id',
+            'product_id' => 'required|exists:cart_details,stock_id',
+        ]);
+
+        try {
+            // Delete the product from the cart
+            CartDetail::where('cart_id', $validated['cart_id'])
+                      ->where('stock_id', $validated['product_id'])
+                      ->delete();
+
+            return response()->json(['message' => 'Product removed from cart successfully.'], 200);
+
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     public function userCartDelete(FilterParamsRequest $request): JsonResponse
