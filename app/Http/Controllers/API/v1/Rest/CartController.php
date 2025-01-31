@@ -13,7 +13,7 @@ use App\Repositories\CartRepository\CartRepository;
 use App\Services\CartService\CartService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-
+use Str;
 class CartController extends RestBaseController
 {
     private CartRepository $cartRepository;
@@ -85,12 +85,13 @@ class CartController extends RestBaseController
     public function insertProducts(RestInsertProductsRequest $request): JsonResponse
     
     {
-        // if (empty($request->input('user_cart_uuid'))) {
-        //     return $this->onErrorResponse([
-        //         'code' => ResponseError::ERROR_400,
-        //         'message' => 'cart id is invalid'
-        //     ]);
-        // }
+        $request['user_cart_uuid'] =Str::uuid();
+        if (empty($request->input('user_cart_uuid'))) {
+            return $this->onErrorResponse([
+                'code' => ResponseError::ERROR_400,
+                'message' => 'cart id is invalid'
+            ]);
+        }
 
         $result = $this->cartService->groupInsertProducts($request->validated());
 
