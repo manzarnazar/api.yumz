@@ -116,42 +116,49 @@ class CartController extends RestBaseController
                 'products' => 'required|array',
                 'products.*.id' => 'required|exists:products,id',
                 'products.*.quantity' => 'required|integer|min:1',
+                'products.*.stock' => 'required|array',
+                'products.*.stock.id' => 'required|exists:stocks,id',
+                'products.*.stock.price' => 'required|numeric',
+                'products.*.stock.total_price' => 'required|numeric',
             ]);
-
+    
             // Create the cart if not exists
             $cart = TestCart::firstOrCreate([
                 'shop_id' => $validated['shop_id'],
                 'guest_id' => $validated['guest_id'],
-                'status' => 1,
+                'status' => 1, // Assuming 1 means active or not completed
             ]);
-
+    
             foreach ($validated['products'] as $product) {
+                $stock = $product['stock'];
                 $productId = $product['id'];
                 $quantity = $product['quantity'];
-
+                
                 // Insert into cart details
                 TestCartDetail::create([
                     'cart_id' => $cart->id,
-                    'stock_id' => $product['stock']['id'],
+                    'stock_id' => $stock['id'],
                     'quantity' => $quantity,
-                    'price' => $product['stock']['price'],
-                    'discount' => $product['stock']['total_price'] - $product['stock']['price'],
-                    'bonus' => $product['stock']['bonus'] ?? 0,
-                    'bonus_type' => $product['stock']['bonus'] ? 'percent' : null,
+                    'price' => $stock['price'],
+                    'discount' => $stock['total_price'] - $stock['price'], // Assuming this is the discount calculation
+                    'bonus' => $stock['bonus'] ?? 0, // Default to 0 if bonus is null
+                    'bonus_type' => isset($stock['bonus']) ? ($stock['bonus'] ? 'percent' : null) : null, // Set 'percent' if bonus exists
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
             }
-
+    
             \DB::commit();
+    
+            // Return a successful response
             return response()->json(['message' => 'Products added to cart successfully.'], 201);
-
+    
         } catch (\Exception $e) {
             \DB::rollBack();
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
-
+    
     // Delete product from the cart
     public function deleteProduct(Request $request)
     {
