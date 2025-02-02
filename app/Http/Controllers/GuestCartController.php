@@ -17,7 +17,7 @@ class GuestCartController extends Controller
             'shop_id' => 'required|exists:shops,id',  // Ensure the shop ID is valid
             'currency_id' => 'required|exists:currencies,id',  // Ensure currency ID is valid
         ]);
-
+    
         // Create a new cart for the guest user
         $cart = Cart::create([
             'guest_id' => $request->guest_id,
@@ -28,22 +28,23 @@ class GuestCartController extends Controller
             'rate' => 1, // Default rate, or fetch dynamically if needed
             'group' => 0, // Default group, can be changed if needed
         ]);
-
+    
         // Add each item to the cart_details table
         foreach ($request->cart_items as $item) {
             CartDetail::create([
-                'cart_id' => $cart->id,  // Corrected reference to the carts table
-                'stock_id' => $item['stock_id'],  // Assuming 'stock_id' refers to the product stock
+                'user_cart_id' => $cart->id,  // Ensure this correctly references the carts table
+                'stock_id' => $item['stock_id'],  
                 'quantity' => $item['quantity'],
                 'price' => $item['price'],
-                'bonus' => $item['bonus'] ?? 0,  // Default bonus to 0 if not set
-                'discount' => $item['discount'] ?? 0,  // Default discount to 0 if not set
-                'bonus_type' => $item['bonus_type'] ?? null,  // Default to null if not set
+                'bonus' => $item['bonus'] ?? 0,  
+                'discount' => $item['discount'] ?? 0,  
+                'bonus_type' => $item['bonus_type'] ?? null,  
             ]);
         }
-
+    
         return response()->json(['cart_id' => $cart->id, 'total_price' => $cart->total_price]);
     }
+    
 
     // Helper function to calculate total price
     private function calculateTotalPrice($cartItems)
