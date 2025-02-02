@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Cart;
-use App\Models\CartDetail;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class GuestCartController extends Controller
 {
@@ -12,37 +11,47 @@ class GuestCartController extends Controller
     {
         // Validate incoming request
         $request->validate([
-            'guest_id' => 'required|exists:guest_users,id',  // Ensure the guest ID is valid
-            'cart_items' => 'required|array',  // Array of cart items
-            'shop_id' => 'required|exists:shops,id',  // Ensure the shop ID is valid
-            'currency_id' => 'required|exists:currencies,id',  // Ensure currency ID is valid
+            'guest_id' => 'required|exists:guest_users,id',
+            'cart_items' => 'required|array',
+            'shop_id' => 'required|exists:shops,id',
+            'currency_id' => 'required|exists:currencies,id',
         ]);
 
-        // Create a new cart for the guest user
-        $cart = Cart::create([
+        // Calculate total price
+        $total_price = $this->calculateTotalPrice($request->cart_items);
+
+        // Insert cart record
+        $cart_id = DB::table('carts')->insertGetId([
             'guest_id' => $request->guest_id,
             'shop_id' => $request->shop_id,
-            'total_price' => $request->total_price,  // Calculate total price
-            'status' => 1, // Active cart
-            'currency_id' => $request->currency_id, // Use provided currency ID
-            'rate' => 1, // Default rate, or fetch dynamically if needed
-            'group' => 0, // Default group, can be changed if needed
+            'total_price' => $total_price,
+            'status' => 1,
+            'currency_id' => $request->currency_id,
+            'rate' => 1,
+            'group' => 0,
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
 
-        // Add each item to the cart_details table
+        // Insert cart items
+        $cart_items = [];
         foreach ($request->cart_items as $item) {
-            CartDetail::create([
-                'user_cart_id' => $cart->id,
-                'stock_id' => $item['stock_id'],  // Assuming 'stock_id' refers to the product stock
+            $cart_items[] = [
+                'user_cart_id' => $cart_id,
+                'stock_id' => $item['stock_id'],
                 'quantity' => $item['quantity'],
                 'price' => $item['price'],
-                'bonus' => $item['bonus'] ?? 0,  // Default bonus to 0 if not set
-                'discount' => $item['discount'] ?? 0,  // Default discount to 0 if not set
-                'bonus_type' => $item['bonus_type'] ?? null,  // Default to null if not set
-            ]);
+                'bonus' => $item['bonus'] ?? 0,
+                'discount' => $item['discount'] ?? 0,
+                'bonus_type' => $item['bonus_type'] ?? null,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
         }
 
-        return response()->json(['cart_id' => $cart->id, 'total_price' => $cart->total_price]);
+        DB::table('cart_details')->insert($cart_items);
+
+        return response()->json(['cart_id' => $cart_id, 'total_price' => $total_price]);
     }
 
     // Helper function to calculate total price
@@ -58,12 +67,18 @@ class GuestCartController extends Controller
     // Get the cart details for a guest user
     public function getCart($guest_id)
     {
-        $cart = Cart::where('guest_id', $guest_id)->with('cartDetails')->first();
+        $cart = DB::table('carts')
+            ->where('guest_id', $guest_id)
+            ->first();
 
         if ($cart) {
+            $cart->cart_details = DB::table('cart_details')
+                ->where('user_cart_id', $cart->id)
+                ->get();
+
             return response()->json($cart);
-        } else {
-            return response()->json(['message' => 'Cart not found'], 404);
         }
+
+        return response()->json(['message' => 'Cart not found'], 404);
     }
 }
