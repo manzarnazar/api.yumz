@@ -32,7 +32,7 @@ class GuestCartController extends Controller
         // Add each item to the cart_details table
         foreach ($request->cart_items as $item) {
             CartDetail::create([
-                'user_cart_id' => $cart->id,
+                'cart_id' => $cart->id,  // Corrected reference to the carts table
                 'stock_id' => $item['stock_id'],  // Assuming 'stock_id' refers to the product stock
                 'quantity' => $item['quantity'],
                 'price' => $item['price'],
