@@ -22,7 +22,7 @@ class GuestCartController extends Controller
         $cart = Cart::create([
             'guest_id' => $request->guest_id,
             'shop_id' => $request->shop_id,
-            'total_price' => $this->calculateTotalPrice($request->cart_items),  // Calculate total price
+            'total_price' => $request->total_price,  // Calculate total price
             'status' => 1, // Active cart
             'currency_id' => $request->currency_id, // Use provided currency ID
             'rate' => 1, // Default rate, or fetch dynamically if needed
