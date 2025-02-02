@@ -16,6 +16,7 @@ class GuestCartController extends Controller
             'cart_items' => 'required|array',  // Array of cart items
             'shop_id' => 'required|exists:shops,id',  // Ensure the shop ID is valid
             'currency_id' => 'required|exists:currencies,id',  // Ensure currency ID is valid
+            'total_price' => 'required|numeric',  // Ensure the total price is provided and valid
         ]);
 
         // Create a new cart for the guest user
@@ -29,10 +30,15 @@ class GuestCartController extends Controller
             'group' => 0, // Default group, can be changed if needed
         ]);
 
+        // Check if cart was successfully created
+        if (!$cart) {
+            return response()->json(['message' => 'Failed to create cart'], 500);
+        }
+
         // Add each item to the cart_details table
         foreach ($request->cart_items as $item) {
             CartDetail::create([
-                'user_cart_id' => $cart->id,
+                'user_cart_id' => $cart->id,  // Ensure the cart ID is correct
                 'stock_id' => $item['stock_id'],  // Assuming 'stock_id' refers to the product stock
                 'quantity' => $item['quantity'],
                 'price' => $item['price'],
