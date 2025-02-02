@@ -3,6 +3,7 @@
 use App\Http\Controllers\API\v1\{GalleryController, PushNotificationController, Rest};
 use App\Http\Controllers\API\v1\Auth\{LoginController, RegisterController, VerifyAuthController};
 use App\Http\Controllers\API\v1\Dashboard\{Admin, Cook, Deliveryman, Payment, Seller, User, Waiter};
+use App\Http\Controllers\GuestCartController;
 use App\Http\Controllers\GuestUserController;
 use App\Http\Controllers\Web\TelegramBotController;
 use App\Models\Page;
@@ -24,6 +25,7 @@ Route::group(['prefix' => 'v1', 'middleware' => ['block.ip']], function () {
         ->middleware('sessions');
     
         Route::post('/guest-users', [GuestUserController::class, 'store'])->middleware('sessions');
+        Route::post('/guest-cart', [GuestCartController::class, 'store'])->middleware('sessions');
 
 
     Route::post('/auth/login',                          [LoginController::class, 'login'])

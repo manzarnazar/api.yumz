@@ -28,10 +28,12 @@ use Illuminate\Support\Collection;
  * @property boolean $group
  * @property Carbon $created_at
  * @property Carbon $updated_at
+ * @property int|null $guest_id  // Added the guest_id property
  * @property-read UserCart $userCart
  * @property-read User|BelongsTo $user
  * @property-read Shop|BelongsTo $shop
  * @property-read Currency|BelongsTo $currency
+ * @property-read GuestUser|BelongsTo $guest  // Relationship with GuestUser
  * @property-read UserCart[]|HasMany|Collection $userCarts
  * @property-read int|null $user_carts_count
  * @method static Builder|Cart newModelQuery()
@@ -44,6 +46,7 @@ use Illuminate\Support\Collection;
  * @method static Builder|Cart whereStockId($value)
  * @method static Builder|Cart whereTotalPrice($value)
  * @method static Builder|Cart whereUpdatedAt($value)
+ * @method static Builder|Cart whereGuestId($value)  // Added scope for guest_id
  * @mixin Eloquent
  */
 class Cart extends Model
@@ -59,6 +62,7 @@ class Cart extends Model
         'total_price'   => 'float',
         'created_at'    => 'datetime:Y-m-d H:i:s',
         'updated_at'    => 'datetime:Y-m-d H:i:s',
+        'guest_id'      => 'integer', // Cast guest_id as integer
     ];
 
     public function getRateTotalPriceAttribute(): float|int|null
@@ -83,6 +87,11 @@ class Cart extends Model
     public function shop(): BelongsTo
     {
         return $this->belongsTo(Shop::class);
+    }
+
+    public function guest(): BelongsTo  // Relationship to GuestUser model
+    {
+        return $this->belongsTo(GuestUser::class, 'guest_id', 'id');
     }
 
     public function userCarts(): HasMany
