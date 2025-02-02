@@ -39,7 +39,7 @@ class GuestCartController extends Controller
 
         foreach ($request->cart_items as $item) {
             CartDetail::create([
-                'user_cart_id' => $cart->id,
+                'user_cart_id' => $usercart->id,
                 'stock_id' => $item['stock_id'],  // Assuming 'stock_id' refers to the product stock
                 'quantity' => $item['quantity'],
                 'price' => $item['price'],
