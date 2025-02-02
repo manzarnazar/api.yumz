@@ -34,13 +34,19 @@ class GuestCartController extends Controller
                 'group' => 0, // Default group, can be changed if needed
             ]);
 
-            // Check if cart was created successfully
+            // Check if cart creation was successful
             if (!$cart) {
                 throw new \Exception('Failed to create cart.');
             }
 
             // Log created cart ID for debugging
             \Log::info('Cart created with ID: ' . $cart->id);
+
+            // Check if cart ID exists in the database
+            $cartExists = Cart::find($cart->id);
+            if (!$cartExists) {
+                throw new \Exception('Cart ID not found in the database.');
+            }
 
             // Add each item to the cart_details table
             foreach ($request->cart_items as $item) {
