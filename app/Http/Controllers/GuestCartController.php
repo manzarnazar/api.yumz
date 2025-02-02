@@ -18,7 +18,7 @@ class GuestCartController extends Controller
             'currency_id' => 'required|exists:currencies,id',  // Ensure currency ID is valid
         ]);
 
-        // Calculate total price using raw SQL query
+        // Calculate total price using the helper function
         $total_price = $this->calculateTotalPrice($request->cart_items);
 
         // Create a new cart for the guest user
@@ -35,7 +35,7 @@ class GuestCartController extends Controller
         // Add each item to the cart_details table
         foreach ($request->cart_items as $item) {
             CartDetail::create([
-                'user_cart_id' => $cart->id,
+                'user_cart_id' => $cart->id,  // Use the cart ID created above
                 'stock_id' => $item['stock_id'],  // Assuming 'stock_id' refers to the product stock
                 'quantity' => $item['quantity'],
                 'price' => $item['price'],
@@ -45,15 +45,16 @@ class GuestCartController extends Controller
             ]);
         }
 
+        // Return response with the created cart ID and total price
         return response()->json(['cart_id' => $cart->id, 'total_price' => $cart->total_price]);
     }
 
     // Helper function to calculate total price
     private function calculateTotalPrice($cartItems)
     {
-        // Use raw SQL query to calculate the total price
         $total = 0;
 
+        // Calculate the total price by multiplying price and quantity for each item
         foreach ($cartItems as $item) {
             $total += $item['price'] * $item['quantity'];
         }
