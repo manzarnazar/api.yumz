@@ -23,7 +23,7 @@ Route::group(['prefix' => 'v1', 'middleware' => ['block.ip']], function () {
     Route::post('/auth/register',                       [RegisterController::class, 'register'])
         ->middleware('sessions');
     
-        Route::post('/guest-users', [GuestUserController::class, 'store']);
+        Route::post('/guest-users', [GuestUserController::class, 'store'])->middleware('sessions');
 
 
     Route::post('/auth/login',                          [LoginController::class, 'login'])
