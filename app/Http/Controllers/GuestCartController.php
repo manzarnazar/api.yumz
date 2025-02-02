@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Cart;
 use App\Models\CartDetail;
+use App\Models\UserCart;
 use Illuminate\Http\Request;
 
 class GuestCartController extends Controller
@@ -19,6 +20,7 @@ class GuestCartController extends Controller
         ]);
 
         // Create a new cart for the guest user
+        // Create a new cart for the guest user
         $cart = Cart::create([
             'guest_id' => $request->guest_id,
             'shop_id' => $request->shop_id,
@@ -28,21 +30,26 @@ class GuestCartController extends Controller
             'rate' => 1, // Default rate, or fetch dynamically if needed
             'group' => 0, // Default group, can be changed if needed
         ]);
+        $usercart = UserCart::create([
+            'cart_id' => $cart->id,
+            'status' => 1,
+            'name'=> "manzar"
+        ]);
 
         // Add each item to the cart_details table
-        foreach ($request->cart_items as $item) {
-            CartDetail::create([
-                // 'user_cart_id' => $cart->id,
-                'stock_id' => $item['stock_id'],  // Assuming 'stock_id' refers to the product stock
-                'quantity' => $item['quantity'],
-                'price' => $item['price'],
-                'bonus' => $item['bonus'] ?? 0,  // Default bonus to 0 if not set
-                'discount' => $item['discount'] ?? 0,  // Default discount to 0 if not set
-                'bonus_type' => $item['bonus_type'] ?? null,  // Default to null if not set
-            ]);
-        }
+        // foreach ($request->cart_items as $item) {
+        //     CartDetail::create([
+        //         'user_cart_id' => $cart->id,
+        //         'stock_id' => $item['stock_id'],  // Assuming 'stock_id' refers to the product stock
+        //         'quantity' => $item['quantity'],
+        //         'price' => $item['price'],
+        //         'bonus' => $item['bonus'] ?? 0,  // Default bonus to 0 if not set
+        //         'discount' => $item['discount'] ?? 0,  // Default discount to 0 if not set
+        //         'bonus_type' => $item['bonus_type'] ?? null,  // Default to null if not set
+        //     ]);
+        // }
 
-        return response()->json(['cart_id' => $cart->id, 'total_price' => $request->total_price]);
+        return response()->json(['cart_id' => $cart->id, 'total_price' => $usercart->id]);
     }
 
     // Helper function to calculate total price
