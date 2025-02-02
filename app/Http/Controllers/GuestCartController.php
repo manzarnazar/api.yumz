@@ -36,18 +36,18 @@ class GuestCartController extends Controller
             'name'=> "manzar"
         ]);
 
-        // Add each item to the cart_details table
-        // foreach ($request->cart_items as $item) {
-        //     CartDetail::create([
-        //         'user_cart_id' => $cart->id,
-        //         'stock_id' => $item['stock_id'],  // Assuming 'stock_id' refers to the product stock
-        //         'quantity' => $item['quantity'],
-        //         'price' => $item['price'],
-        //         'bonus' => $item['bonus'] ?? 0,  // Default bonus to 0 if not set
-        //         'discount' => $item['discount'] ?? 0,  // Default discount to 0 if not set
-        //         'bonus_type' => $item['bonus_type'] ?? null,  // Default to null if not set
-        //     ]);
-        // }
+
+        foreach ($request->cart_items as $item) {
+            CartDetail::create([
+                'user_cart_id' => $cart->id,
+                'stock_id' => $item['stock_id'],  // Assuming 'stock_id' refers to the product stock
+                'quantity' => $item['quantity'],
+                'price' => $item['price'],
+                'bonus' => $item['bonus'] ?? 0,  // Default bonus to 0 if not set
+                'discount' => $item['discount'] ?? 0,  // Default discount to 0 if not set
+                'bonus_type' => $item['bonus_type'] ?? null,  // Default to null if not set
+            ]);
+        }
 
         return response()->json(['cart_id' => $cart->id, 'total_price' => $usercart->id]);
     }
