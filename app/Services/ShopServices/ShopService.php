@@ -141,6 +141,12 @@ class ShopService extends CoreService implements ShopServiceInterface
             ->where('uuid', $uuid)
             ->first();
 
+            $open = (data_get($data, 'categories'));
+    
+    // Log the 'open' parameter value
+    \Log::info('Open Parameter Value: ' . $open);
+
+
         if (empty($shop)) {
             return ['status' => false, 'code' => ResponseError::ERROR_404];
         }
