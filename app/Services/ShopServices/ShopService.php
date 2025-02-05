@@ -275,10 +275,13 @@ class ShopService extends CoreService implements ShopServiceInterface
     private function setShopParams(array $data, ?Shop $shop = null): array
     {
         if ($shop) {
-            // Toggle the shop's open status
-            
-            $shop->update(['open' => $data['open'] = filter_var(data_get($data, 'open', $shop?->open ?? 0), FILTER_VALIDATE_BOOLEAN)        ]);
+            // Ensure 'open' is correctly cast as a boolean
+            $openStatus = filter_var(data_get($data, 'open', $shop?->open ?? 0), FILTER_VALIDATE_BOOLEAN);
+        
+            // Update the shop's open status
+            $shop->update(['open' => $openStatus]);
         }
+        
         
 
         $location       = data_get($data, 'location', $shop?->location);
