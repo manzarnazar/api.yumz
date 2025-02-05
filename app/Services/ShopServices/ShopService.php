@@ -215,6 +215,7 @@ class ShopService extends CoreService implements ShopServiceInterface
         return [
             'status' => true,
             'code' => ResponseError::NO_ERROR,
+            'open' => (data_get($data, 'open')),
             'data' => Shop::with([
                 'translation' => fn($q) => $q->where('locale', $this->language),
                 'subscription' => fn($q) => $q->where('expired_at', '>=', now())->where('active', true),
