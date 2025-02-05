@@ -133,15 +133,108 @@ class ShopService extends CoreService implements ShopServiceInterface
      */
     public function update(string $uuid, array $data): array
 {
-    $open = data_get($data, 'open');
+    try {
+        /** @var Shop $shop */
+        $shop = $this->model();
 
-    // Return a JSON response with the 'open' parameter if it exists
-    if ($open !== null) {
-        return response()->json(['open' => $open]);
+        $shop = $shop->when(data_get($data, 'user_id'), fn($q, $userId) => $q->where('user_id', $userId))
+            ->where('uuid', $uuid)
+            ->first();
+
+        if (empty($shop)) {
+            return ['status' => false, 'code' => ResponseError::ERROR_404];
+        }
+
+        $shop->update($this->setShopParams($data, $shop));
+
+        if (data_get($data, 'categories.*', [])) {
+            (new ShopCategoryService)->update($data, $shop);
+        }
+
+        $this->setTranslations($shop, $data, true, true);
+
+        if (data_get($data, 'images.0')) {
+            $shop->galleries()->where('type', '!=', 'shop-documents')->delete();
+            $shop->update([
+                'logo_img'       => data_get($data, 'images.0'),
+                'background_img' => data_get($data, 'images.1'),
+            ]);
+            $shop->uploads(data_get($data, 'images'));
+        }
+
+        if (data_get($data, 'documents.0')) {
+            $shop->uploads(data_get($data, 'documents'));
+        }
+
+        if (data_get($data, 'tags.0')) {
+            $shop->tags()->sync(data_get($data, 'tags', []));
+        }
+
+
+        $locations = $data['shop_delivery_zipcodes'] ?? []; 
+
+
+        if (is_string($locations)) {
+            $locations = json_decode($locations, true); // Decode outer JSON string to an array
+        }
+
+
+        foreach ($locations as &$location) {
+            if (is_string($location)) {
+                $location = json_decode($location, true); // Decode each item
+            }
+        }
+
+        // Remove duplicates based on location data
+        $locations = array_map("unserialize", array_unique(array_map("serialize", $locations)));
+
+
+        if (!is_array($locations)) {
+            \Log::error('Invalid locations format', ['locations' => $locations]);
+            return $this->errorResponse(__('errors.invalid_locations_format'), [], 400);
+        }
+
+        $oldData =ShopDeliveryZipcode::where("shop_id",$shop->id)->get(['id']);
+
+        if($oldData->count() > 0){
+            foreach($oldData as $oldD){
+                $oldD->delete();
+            }
+        }
+
+        foreach ($locations as $location) {
+
+            ShopDeliveryZipcode::create([
+                'zip_code' => $location['zip_code'],
+                'delivery_price' => $location['delivery_price'],
+                'city' => $location['city'],
+                'shop_id' => $shop->id,
+            ]);
+        }
+
+        return [
+            'status' => true,
+            'code' => ResponseError::NO_ERROR,
+            'data' => Shop::with([
+                'translation' => fn($q) => $q->where('locale', $this->language),
+                'subscription' => fn($q) => $q->where('expired_at', '>=', now())->where('active', true),
+                'categories.translation' => fn($q) => $q->where('locale', $this->language),
+                'tags.translation' => fn($q) => $q->where('locale', $this->language),
+                'seller' => fn($q) => $q->select('id', 'firstname', 'lastname', 'uuid'),
+                'subscription.subscription',
+                'seller.roles',
+                'workingDays',
+                'closedDates',
+            ])->find($shop->id)
+        ];
+    } catch (Exception $e) {
+        $this->error($e);
+        return [
+            'status' => false,
+            'code' => ResponseError::ERROR_502,
+            'message' => __('errors.' . ResponseError::ERROR_502, locale: $this->language)
+        ];
     }
-
-    // Optionally, return an empty response or handle the case where 'open' is missing
-    return response()->json([]);
 }
 
 
@@ -183,7 +276,7 @@ class ShopService extends CoreService implements ShopServiceInterface
     {
         if ($shop) {
             // Toggle the shop's open status
-            $shop->update(['open' => !$shop->open]);
+            $shop->update(['status_note' => data_get($data, 'open',)]);
         }
         
 
