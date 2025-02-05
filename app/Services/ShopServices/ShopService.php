@@ -275,11 +275,19 @@ class ShopService extends CoreService implements ShopServiceInterface
     private function setShopParams(array $data, ?Shop $shop = null): array
     {
         if ($shop) {
-            // Ensure 'open' is correctly cast as a boolean
             $openStatus = filter_var(data_get($data, 'open', $shop?->open ?? 0), FILTER_VALIDATE_BOOLEAN);
+    
+            // Log current and new values
+            \Log::info('Current Open Value:', ['current' => $shop->open]);
+            \Log::info('New Open Value:', ['new' => $openStatus]);
         
-            // Update the shop's open status
-            $shop->update(['open' => $openStatus]);
+            // Update the shop
+            $shop->open = $openStatus; // Direct assignment for testing
+            $shop->save(); // Use save instead of update()
+        
+            // Log the SQL query
+            \DB::enableQueryLog();
+            \Log::info('SQL Queries:', \DB::getQueryLog());
         }
         
         
