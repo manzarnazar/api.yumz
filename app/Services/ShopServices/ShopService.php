@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Services\ShopServices;
+use Illuminate\Support\Facades\Log;
 
 use App\Helpers\FileHelper;
 use App\Helpers\ResponseError;
@@ -278,6 +279,9 @@ class ShopService extends CoreService implements ShopServiceInterface
         //     // Toggle the shop's open status
         //     $shop->update(['open' => !$shop->open]);
         // }
+
+        \Log::info('Open Parameter: ' . data_get($data, 'open'));
+
         
 
         $location       = data_get($data, 'location', $shop?->location);
