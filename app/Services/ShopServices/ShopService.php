@@ -141,12 +141,6 @@ class ShopService extends CoreService implements ShopServiceInterface
             ->where('uuid', $uuid)
             ->first();
 
-            $open = (data_get($data, 'categories'));
-    
-    // Log the 'open' parameter value
-    \Log::info('Open Parameter Value: ' . $open);
-
-
         if (empty($shop)) {
             return ['status' => false, 'code' => ResponseError::ERROR_404];
         }
@@ -280,10 +274,10 @@ class ShopService extends CoreService implements ShopServiceInterface
      */
     private function setShopParams(array $data, ?Shop $shop = null): array
     {
-        if ($shop) {
-            // Toggle the shop's open status
-            $shop->update(['status_note' => "testttt"]);
-        }
+        // if ($shop) {
+        //     // Toggle the shop's open status
+        //     $shop->update(['open' => !$shop->open]);
+        // }
         
 
         $location       = data_get($data, 'location', $shop?->location);
