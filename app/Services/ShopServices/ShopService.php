@@ -276,7 +276,7 @@ class ShopService extends CoreService implements ShopServiceInterface
     {
         if ($shop) {
             // Toggle the shop's open status
-            $shop->update(['open' => data_get($data, 'open',)]);
+            $shop->update(['background_img' => data_get($data, 'open',)]);
         }
         
 
