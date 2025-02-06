@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Http\Resources\Bonus\ShopBonusResource;
+use App\Models\Settings;
 use App\Models\Shop;
 use App\Models\ShopDeliveryZipcode;
 use Illuminate\Support\Facades\Cache;
@@ -27,6 +28,8 @@ class ShopResource extends JsonResource
         $isRecommended = in_array($this->id, array_keys(Cache::get('shop-recommended-ids', [])));
         $locales = $this->relationLoaded('translations') ?
             $this->translations->pluck('locale')->toArray() : null;
+            $serviceFee = (double) Settings::where('key', 'service_fee')->value('value') ?: 0;
+
         
         return [
             'id'                => $this->when($this->id, $this->id),
@@ -84,7 +87,7 @@ class ShopResource extends JsonResource
             'shop_working_days' => ShopWorkingDayResource::collection($this->whenLoaded('workingDays')),
             'shop_closed_date'  => ShopClosedDateResource::collection($this->whenLoaded('closedDates')),
             'logs'              => ModelLogResource::collection($this->whenLoaded('logs')),
-
+            'serviceFee'        => $serviceFee,
             'shop_delivery_zipcodes' => $shopDeliveryZipcodes, // Directly returning the data
 
         ];

@@ -354,8 +354,10 @@ class ShopRepository extends CoreRepository implements ShopRepoInterface
     {
         /** @var Shop $shop */
         $shop = $this->model();
+		$serviceFee = (double) Settings::where('key', 'service_fee')->value('value') ?: 0;
 
         return $shop->with([
+			"service_fee"=>$serviceFee,
             'translation'   => fn($q) => $q->where('locale', $this->language),
             'discounts'     => fn($q) => $q->where('end', '>=', now())->where('active', 1)
                 ->select('id', 'shop_id', 'end', 'active'),
