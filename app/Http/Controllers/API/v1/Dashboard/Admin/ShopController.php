@@ -170,7 +170,7 @@ class ShopController extends AdminBaseController
     public function update(StoreRequest $request, string $uuid): JsonResponse
     {
 
-        \Log::info('Shop Update Request - Open Status:', ['open' => $request->input('open')]);
+         \Log::info('Open Status:', ['open' => $request->input('open')]);
 
         $shop = Shop::where(['user_id' => $request->input('user_id'), 'uuid' => $uuid])->first();
 
