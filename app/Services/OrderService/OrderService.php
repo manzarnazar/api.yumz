@@ -360,6 +360,7 @@ class OrderService extends CoreService implements OrderServiceInterface
 				->where('city', $city)
 				->first();
 			\Log::info('Delivery Data:', (array)$deliveryData);
+			\Log::info('Delivery Data:', $city);
 		
 			if ($deliveryData) {
 				$deliveryFee = $deliveryData->delivery_price;
