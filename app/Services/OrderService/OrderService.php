@@ -337,7 +337,7 @@ class OrderService extends CoreService implements OrderServiceInterface
 
 		$shopTax = max($totalPrice / 100 * $shop?->tax, 0);
 
-		$totalPrice += ($shopTax + $totalDiscount);
+		$totalPrice += ($totalDiscount);
 
 		$totalDiscount += $this->recalculateReceipt($order);
 
@@ -376,7 +376,7 @@ class OrderService extends CoreService implements OrderServiceInterface
 
 		} else if ($coupon?->for === 'total_price') {
 
-			$totalPrice -= max($this->checkCoupon($coupon, $order, $totalPrice - $shopTax), 0);
+			$totalPrice -= max($this->checkCoupon($coupon, $order, $totalPrice), 0);
 
 		}
 
