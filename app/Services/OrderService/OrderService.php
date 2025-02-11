@@ -335,7 +335,7 @@ class OrderService extends CoreService implements OrderServiceInterface
 		$totalDiscount  = $order->orderDetails->sum('discount');
 		$totalPrice     = $order->orderDetails->sum('total_price');
 
-		$shopTax = max($totalPrice / 100 * $shop?->tax, 0);
+		// $shopTax = max($totalPrice / 100 * $shop?->tax, 0);
 
 		$totalPrice += ($totalDiscount);
 
@@ -453,7 +453,7 @@ class OrderService extends CoreService implements OrderServiceInterface
 			'commission_fee' => $commissionFee,
 			'service_fee'    => $serviceFee,
 			'total_discount' => max($totalDiscount, 0),
-			'tax'            => $shopTax,
+			// 'tax'            => $shopTax,
 			'waiter_fee'     => $waiterFeeRate,
 			'tips'           => $tipsRate,
 			'status'		 => $status,
