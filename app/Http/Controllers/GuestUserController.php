@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\GuestUser;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class GuestUserController extends Controller
@@ -10,18 +11,35 @@ class GuestUserController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string',
-            'email' => 'nullable|email|unique:guest_users,email',
-            'phone_number' => 'nullable|string',
+            'firstname'   => 'required|string',
+            'lastname'    => 'required|string',
+            'email'        => 'nullable|email|unique:users,email',
+            'phone' => 'nullable|string',
         ]);
 
-        // Check if a guest with the same email already exists
-        $guestUser = GuestUser::where('email', $request->email)->first();
+        // Check if the user already exists
+        $user = User::where('email', $request->email)->first();
 
-        if (!$guestUser) {
-            $guestUser = GuestUser::create($request->only(['name', 'email', 'phone_number']));
+        if (!$user) {
+            $user = User::create([
+                'firstname' => $request->first_name,
+                'lastname'  => $request->last_name,
+                'email'      => $request->email,
+                'phone'      => $request->phone_number,
+            ]);
         }
 
-        return response()->json(['guest_id' => $guestUser->id]);
+        // Check if guest user already exists
+        $guestUser = GuestUser::where('user_id', $user->id)->first();
+
+        if (!$guestUser) {
+            $guestUser = GuestUser::create([
+                'user_id'      => $user->id,
+                'email'        => $user->email,
+                'phone_number' => $user->phone,
+            ]);
+        }
+
+        return response()->json(['guest_id' => $guestUser->id, 'user_id' => $user->id]);
     }
 }
