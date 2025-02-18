@@ -22,8 +22,8 @@ class GuestUserController extends Controller
 
         if (!$user) {
             $user = User::create([
-                'firstname' => $request->first_name,
-                'lastname'  => $request->last_name,
+                'firstname' => $request->firstname,
+                'lastname'  => $request->lastname,
                 'email'      => $request->email,
                 'phone'      => $request->phone_number,
             ]);
