@@ -25,7 +25,7 @@ class GuestUserController extends Controller
                 'firstname' => $request->firstname,
                 'lastname'  => $request->lastname,
                 'email'      => $request->email,
-                'phone'      => $request->phone_number,
+                'phone'      => $request->phone,
             ]);
         }
 
