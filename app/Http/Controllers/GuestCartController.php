@@ -52,7 +52,7 @@ class GuestCartController extends Controller
             ]);
         }
 
-        return response()->json(['cart_id' => $cart->id, 'total_price' => $usercart->uuid]);
+        return response()->json(['cart_id' => $cart->id, 'cart_uuid' => $usercart->uuid]);
     }
 
     // Helper function to calculate total price
