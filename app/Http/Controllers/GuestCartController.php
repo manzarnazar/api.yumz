@@ -10,61 +10,47 @@ use Illuminate\Http\Request;
 class GuestCartController extends Controller
 {
     public function store(Request $request)
-{
-    // Validate incoming request
-    $request->validate([
-        'guest_id' => 'required|exists:guest_users,id',
-        'user_id' => 'required|exists:users,id',
-        'shop_id' => 'required|exists:shops,id',
-        'currency_id' => 'required|exists:currencies,id',
-        'name' => 'nullable|string',
-        'cart_items' => 'required|array',
-        'cart_items.*.stock_id' => 'required|exists:stocks,id',
-        'cart_items.*.quantity' => 'required|integer|min:1',
-        'cart_items.*.price' => 'required|numeric|min:0',
-        'cart_items.*.bonus' => 'nullable|numeric|min:0',
-        'cart_items.*.discount' => 'nullable|numeric|min:0',
-        'cart_items.*.bonus_type' => 'nullable|string',
-    ]);
-
-    // Calculate total price
-    $totalPrice = $this->calculateTotalPrice($request->cart_items);
-
-    // Create the cart
-    $cart = Cart::create([
-        'guest_id' => $request->guest_id,
-        'shop_id' => $request->shop_id,
-        'owner_id' => $request->user_id,
-        'total_price' => $totalPrice,
-        'status' => 1,
-        'currency_id' => $request->currency_id,
-        'rate' => 1,
-        'group' => 0,
-    ]);
-
-    // Create the user cart
-    $usercart = UserCart::create([
-        'cart_id' => $cart->id,
-        'status' => 1,
-        'user_id' => $request->user_id,
-        'name' => $request->name
-    ]);
-
-    // Add cart items
-    foreach ($request->cart_items as $item) {
-        CartDetail::create([
-            'user_cart_id' => $usercart->id,
-            'stock_id' => $item['stock_id'],
-            'quantity' => $item['quantity'],
-            'price' => $item['price'],
-            'bonus' => $item['bonus'] ?? 0,
-            'discount' => $item['discount'] ?? 0,
-            'bonus_type' => $item['bonus_type'] ?? null,
+    {
+        // Validate incoming request
+        $request->validate([
+            'guest_id' => 'required|exists:guest_users,id',  // Ensure the guest ID is valid
+            // 'cart_items' => 'required|array',  // Array of cart items
+            'shop_id' => 'required|exists:shops,id',  // Ensure the shop ID is valid
+            'currency_id' => 'required|exists:currencies,id',  // Ensure currency ID is valid
         ]);
-    }
 
-    return response()->json(['cart_id' => $cart->id, 'cart_uuid' => $usercart->uuid]);
-}
+        // Create a new cart for the guest user
+        // Create a new cart for the guest user
+        $cart = Cart::create([
+            'guest_id' => $request->guest_id,
+            'shop_id' => $request->shop_id,
+            'total_price' => $request->total_price,  // Calculate total price
+            'status' => 1, // Active cart
+            'currency_id' => $request->currency_id, // Use provided currency ID
+            'rate' => 1, // Default rate, or fetch dynamically if needed
+            'group' => 0, // Default group, can be changed if needed
+        ]);
+        // $usercart = UserCart::create([
+        //     'cart_id' => $cart->id,
+        //     'status' => 1,
+        //     'name'=> "manzar"
+        // ]);
+
+
+        // foreach ($request->cart_items as $item) {
+        //     CartDetail::create([
+        //         'user_cart_id' => $usercart->id,
+        //         'stock_id' => $item['stock_id'],  // Assuming 'stock_id' refers to the product stock
+        //         'quantity' => $item['quantity'],
+        //         'price' => $item['price'],
+        //         'bonus' => $item['bonus'] ?? 0,  // Default bonus to 0 if not set
+        //         'discount' => $item['discount'] ?? 0,  // Default discount to 0 if not set
+        //         'bonus_type' => $item['bonus_type'] ?? null,  // Default to null if not set
+        //     ]);
+        // }
+
+        return response()->json(['cart_id' => $cart->id, 'total_price' => 80]);
+    }
 
     // Helper function to calculate total price
     private function calculateTotalPrice($cartItems)
