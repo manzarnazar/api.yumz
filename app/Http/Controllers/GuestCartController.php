@@ -14,6 +14,7 @@ class GuestCartController extends Controller
         // Validate incoming request
         $request->validate([
             'guest_id' => 'required|exists:guest_users,id',  // Ensure the guest ID is valid
+            'user_id' => 'required|exists:users,id',  // Ensure the guest ID is valid
             'cart_items' => 'required|array',  // Array of cart items
             'shop_id' => 'required|exists:shops,id',  // Ensure the shop ID is valid
             'currency_id' => 'required|exists:currencies,id',  // Ensure currency ID is valid
@@ -23,6 +24,7 @@ class GuestCartController extends Controller
         // Create a new cart for the guest user
         $cart = Cart::create([
             'guest_id' => $request->guest_id,
+            'owner_id' => $request->user_id,
             'shop_id' => $request->shop_id,
             'total_price' => $request->total_price,  // Calculate total price
             'status' => 1, // Active cart
@@ -32,6 +34,8 @@ class GuestCartController extends Controller
         ]);
         $usercart = UserCart::create([
             'cart_id' => $cart->id,
+            'user_id' => $request->user_id,
+
             'status' => 1,
             'name'=> "manzar"
         ]);
@@ -49,7 +53,7 @@ class GuestCartController extends Controller
             ]);
         }
 
-        return response()->json(['cart_id' => $cart->id, 'total_price' => $usercart->id]);
+        return response()->json(['cart_id' => $cart->id, 'total_price' => $usercart->uuid]);
     }
 
     // Helper function to calculate total price
