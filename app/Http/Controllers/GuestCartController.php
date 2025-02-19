@@ -35,7 +35,6 @@ class GuestCartController extends Controller
         $usercart = UserCart::create([
             'cart_id' => $cart->id,
             'user_id' => $request->user_id,
-
             'status' => 1,
             'name'=> "manzar"
         ]);
