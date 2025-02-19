@@ -30,10 +30,10 @@ class GuestUserController extends Controller
             ]);
         }
     
-        // Check if the guest user already exists
+
         $guestUser = GuestUser::where('user_id', $user->id)->first();
     
-        // If guest user doesn't exist, create one
+
         if (!$guestUser) {
             $guestUser = GuestUser::create([
                 'user_id'      => $user->id,
