@@ -18,6 +18,7 @@ class GuestCartController extends Controller
             'cart_items' => 'required|array',  // Array of cart items
             'shop_id' => 'required|exists:shops,id',  // Ensure the shop ID is valid
             'currency_id' => 'required|exists:currencies,id',  // Ensure currency ID is valid
+            'name' => 'nullable|string'
         ]);
 
         // Create a new cart for the guest user
@@ -36,7 +37,7 @@ class GuestCartController extends Controller
             'cart_id' => $cart->id,
             'user_id' => $request->user_id,
             'status' => 1,
-            'name'=> "manzar"
+            'name'=> $request->name
         ]);
 
 
