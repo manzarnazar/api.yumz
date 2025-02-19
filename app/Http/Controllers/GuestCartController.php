@@ -14,7 +14,7 @@ class GuestCartController extends Controller
         // Validate incoming request
         $request->validate([
             'guest_id' => 'required|exists:guest_users,id',  // Ensure the guest ID is valid
-            'cart_items' => 'required|array',  // Array of cart items
+            // 'cart_items' => 'required|array',  // Array of cart items
             'shop_id' => 'required|exists:shops,id',  // Ensure the shop ID is valid
             'currency_id' => 'required|exists:currencies,id',  // Ensure currency ID is valid
         ]);
