@@ -13,7 +13,7 @@ class GuestUserController extends Controller
         $request->validate([
             'firstname'   => 'required|string',
             'lastname'    => 'required|string',
-            'email'       => 'nullable|email|unique:users,email',
+            'email'       => 'nullable|string',
             'phone'       => 'nullable|string',
         ]);
     
