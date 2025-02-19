@@ -13,7 +13,6 @@ class GuestUserController extends Controller
         $request->validate([
             'firstname'   => 'required|string',
             'lastname'    => 'required|string',
-            'email'        => 'nullable|email|unique:users,email',
             'phone' => 'nullable|string',
         ]);
 
@@ -24,7 +23,6 @@ class GuestUserController extends Controller
             $user = User::create([
                 'firstname' => $request->firstname,
                 'lastname'  => $request->lastname,
-                'email'      => $request->email,
                 'phone'      => $request->phone,
             ]);
         }
@@ -35,7 +33,6 @@ class GuestUserController extends Controller
         if (!$guestUser) {
             $guestUser = GuestUser::create([
                 'user_id'      => $user->id,
-                'email'        => $user->email,
                 'phone_number' => $user->phone,
             ]);
         }
