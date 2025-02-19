@@ -18,7 +18,7 @@ class GuestUserController extends Controller
         ]);
 
         // Check if the user already exists
-        $user = User::where('email', $request->email)->first();
+        $user = User::where('phone', $request->phone)->first();
 
         if (!$user) {
             $user = User::create([
