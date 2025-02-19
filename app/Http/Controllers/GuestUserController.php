@@ -17,7 +17,7 @@ class GuestUserController extends Controller
             'phone' => 'nullable|string',
         ]);
 
-        // Check if the user already exists
+
         $user = User::where('phone', $request->phone)->first();
 
         if (!$user) {
