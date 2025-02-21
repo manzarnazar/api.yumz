@@ -10,6 +10,7 @@ use App\Http\Requests\Order\RestStoreRequest;
 use App\Http\Requests\Order\UpdateTipsRequest;
 use App\Http\Resources\OrderResource;
 use App\Http\Resources\UserResource;
+use App\Models\Cart;
 use App\Models\Order;
 use App\Models\Settings;
 use App\Repositories\OrderRepository\OrderRepository;
@@ -57,20 +58,71 @@ class OrderController extends RestBaseController
      * @param RestStoreRequest $request
      * @return JsonResponse
      */
-    public function store(RestStoreRequest $request): JsonResponse
-    {
-        $validated = $request->validated();
-        $result = $this->orderService->create($validated);
+    // public function store(RestStoreRequest $request): JsonResponse
+    // {
+    //     $validated = $request->validated();
+    //     $result = $this->orderService->create($validated);
 
-        if (!data_get($result, 'status')) {
-            return $this->onErrorResponse($result);
-        }
+    //     if (!data_get($result, 'status')) {
+    //         return $this->onErrorResponse($result);
+    //     }
 
-        return $this->successResponse(
-            __('errors.' . ResponseError::RECORD_WAS_SUCCESSFULLY_CREATED, locale: $this->language),
-            $this->orderRepository->reDataOrder(data_get($result, 'data'))
-        );
-    }
+    //     return $this->successResponse(
+    //         __('errors.' . ResponseError::RECORD_WAS_SUCCESSFULLY_CREATED, locale: $this->language),
+    //         $this->orderRepository->reDataOrder(data_get($result, 'data'))
+    //     );
+    // }
+
+	public function store(RestStoreRequest $request): JsonResponse
+	{
+		$validated = $request->validated();
+
+		if ((int)data_get(Settings::where('key', 'order_auto_approved')->first(), 'value') === 1) {
+			$validated['status'] = Order::STATUS_ACCEPTED;
+		}
+
+		$validated['user_id'] = data_get($request, 'user_id');
+
+		$cart = Cart::with([
+			'userCarts:id,cart_id',
+			'userCarts.cartDetails:id'
+		])
+			->select('id')
+			->find(data_get($validated, 'cart_id'));
+
+		if (empty($cart)) {
+			return $this->onErrorResponse([
+				'code'      => ResponseError::ERROR_404,
+				'message'   => __('errors.' . ResponseError::ERROR_404, locale: $this->language)
+			]);
+		}
+
+		/** @var Cart $cart */
+		if ($cart->user_carts_count === 0) {
+			return $this->onErrorResponse([
+				'code'    => ResponseError::ERROR_400,
+				'message' => __('errors.' . ResponseError::USER_CARTS_IS_EMPTY, locale: $this->language)
+			]);
+		}
+
+		if ($cart->userCarts()->withCount('cartDetails')->get()->sum('cart_details_count') === 0) {
+			return $this->onErrorResponse([
+				'code'    => ResponseError::ERROR_400,
+				'message' => __('errors.' . ResponseError::PRODUCTS_IS_EMPTY, locale: $this->language)
+			]);
+		}
+
+		$result = $this->orderService->create($validated);
+
+		if (!data_get($result, 'status')) {
+			return $this->onErrorResponse($result);
+		}
+
+		return $this->successResponse(
+			__('errors.' . ResponseError::RECORD_WAS_SUCCESSFULLY_CREATED, locale: $this->language),
+			$this->orderRepository->reDataOrder(data_get($result, 'data'))
+		);
+	}
 
 	/**
 	 * Display the specified resource.
