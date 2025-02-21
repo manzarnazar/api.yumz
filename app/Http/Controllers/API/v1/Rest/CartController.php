@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API\v1\Rest;
 
 use App\Helpers\ResponseError;
+use App\Http\Requests\Cart\CalculateRequest;
 use App\Http\Requests\Cart\GroupStoreRequest;
 use App\Http\Requests\Cart\IndexRequest;
 use App\Http\Requests\Cart\OpenCartRequest;
@@ -25,6 +26,19 @@ class CartController extends RestBaseController
         $this->cartRepository = $cartRepository;
         $this->cartService = $cartService;
     }
+    public function cartCalculate(int $id, CalculateRequest $request): JsonResponse
+    {
+        $result = $this->cartRepository->calculateByCartId($id, $request->all());
+
+        if (!data_get($result, 'status')) {
+            return $this->onErrorResponse($result);
+        }
+
+        return $this->successResponse(
+            __('errors.' . ResponseError::SUCCESS, locale: $this->language), data_get($result, 'data')
+        );
+    }
+
 
     public function get(int $id, IndexRequest $request): JsonResponse
     {

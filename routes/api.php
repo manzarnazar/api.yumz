@@ -210,7 +210,7 @@ Route::group(['prefix' => 'v1', 'middleware' => ['block.ip']], function () {
         Route::delete('cart/product/delete',        [Rest\CartController::class, 'cartProductDelete']);
         Route::delete('cart/member/delete',         [Rest\CartController::class, 'userCartDelete']);
         Route::post('cart/status/{user_cart_uuid}', [Rest\CartController::class, 'statusChange']);
-        Route::post('cart/calculate/{id}',         	[User\CartController::class, 'cartCalculate']);
+        Route::post('cart/calculate/{id}',         	[Rest\CartController::class, 'cartCalculate']);
 
         /* Stories */
         Route::get('stories/paginate',              [Rest\StoryController::class, 'paginate']);
