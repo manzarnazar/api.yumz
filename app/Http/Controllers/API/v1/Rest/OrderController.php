@@ -135,7 +135,7 @@ class OrderController extends RestBaseController
     {
 		$phone = $request->input('phone');
 
-        $order = $this->orderRepository->orderById($id, phone: $phone);
+        $order = $this->orderRepository->orderById($id, 508,130,"12121212");
 
 		if (!$phone && !$order->table_id) {
 			return $this->onErrorResponse([
