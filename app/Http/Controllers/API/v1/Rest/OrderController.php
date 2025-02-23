@@ -144,9 +144,11 @@ class OrderController extends RestBaseController
 			]);
 		}
 
+		
         return $this->successResponse(ResponseError::NO_ERROR, $this->orderRepository->reDataOrder($order));
     }
 
+	
     /**
      * Display the specified resource.
      *
