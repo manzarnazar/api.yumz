@@ -154,12 +154,12 @@ class OrderController extends RestBaseController
 	{
 		$order = $this->orderRepository->orderById($id, userId: 130);
 
-		// if (!optional($order)->user_id) {
-		// 	return $this->onErrorResponse([
-		// 		'code'    => ResponseError::ERROR_404,
-		// 		'message' => __('errors.' . ResponseError::ORDER_NOT_FOUND, locale: $this->language)
-		// 	]);
-		// }
+		if (!optional($order)->user_id) {
+			return $this->onErrorResponse([
+				'code'    => ResponseError::ERROR_404,
+				'message' => __('errors.' . ResponseError::ORDER_NOT_FOUND, locale: $this->language)
+			]);
+		}
 
 		return $this->successResponse(ResponseError::NO_ERROR, $this->orderRepository->reDataOrder($order));
 	}
