@@ -13,6 +13,7 @@ use App\Http\Resources\UserResource;
 use App\Models\Cart;
 use App\Models\Order;
 use App\Models\Settings;
+use App\Repositories\Interfaces\OrderRepoInterface;
 use App\Repositories\OrderRepository\OrderRepository;
 use App\Services\OrderService\OrderReviewService;
 use App\Services\OrderService\OrderService;
@@ -26,7 +27,8 @@ class OrderController extends RestBaseController
 	use Notification;
 
     public function __construct(
-        private OrderRepository $orderRepository,
+
+		private OrderRepoInterface $orderRepository,
         private OrderService $orderService
     )
     {
@@ -131,22 +133,36 @@ class OrderController extends RestBaseController
 	 * @param FilterParamsRequest $request
 	 * @return JsonResponse
 	 */
-    public function show(int $id, FilterParamsRequest $request): JsonResponse
-    {
-		$phone = $request->input('phone');
+    // public function show(int $id, FilterParamsRequest $request): JsonResponse
+    // {
+	// 	$phone = $request->input('phone');
 
-        $order = $this->orderRepository->orderById($id, phone: $phone);
+    //     $order = $this->orderRepository->orderById($id, phone: $phone);
 
-		if (!$phone && !$order->table_id) {
-			return $this->onErrorResponse([
-			 	'code'    => ResponseError::ERROR_404,
-			 	'message' => __('errors.' . ResponseError::ERROR_404, locale: $this->language)
-			]);
-		}
+	// 	if (!$phone && !$order->table_id) {
+	// 		return $this->onErrorResponse([
+	// 		 	'code'    => ResponseError::ERROR_404,
+	// 		 	'message' => __('errors.' . ResponseError::ERROR_404, locale: $this->language)
+	// 		]);
+	// 	}
 
 		
-        return $this->successResponse(ResponseError::NO_ERROR, $this->orderRepository->reDataOrder($order));
-    }
+    //     return $this->successResponse(ResponseError::NO_ERROR, $this->orderRepository->reDataOrder($order));
+    // }
+
+	public function show(int $id): JsonResponse
+	{
+		$order = $this->orderRepository->orderById($id, userId: 130);
+
+		// if (!optional($order)->user_id) {
+		// 	return $this->onErrorResponse([
+		// 		'code'    => ResponseError::ERROR_404,
+		// 		'message' => __('errors.' . ResponseError::ORDER_NOT_FOUND, locale: $this->language)
+		// 	]);
+		// }
+
+		return $this->successResponse(ResponseError::NO_ERROR, $this->orderRepository->reDataOrder($order));
+	}
 
 	
     /**
@@ -266,12 +282,12 @@ class OrderController extends RestBaseController
 	 * @param int $id
 	 * @return JsonResponse
 	 */
-	public function showByTableId(int $id): JsonResponse
-	{
-		$order = $this->orderRepository->orderByTableId($id);
+	// public function showByTableId(int $id): JsonResponse
+	// {
+	// 	$order = $this->orderRepository->orderByTableId($id);
 
-		return $this->successResponse(ResponseError::NO_ERROR, $this->orderRepository->reDataOrder($order));
-	}
+	// 	return $this->successResponse(ResponseError::NO_ERROR, $this->orderRepository->reDataOrder($order));
+	// }
 
 	/**
 	 * Display the specified resource.
@@ -305,19 +321,19 @@ class OrderController extends RestBaseController
 	 * @param int $id
 	 * @return JsonResponse
 	 */
-	public function showDeliveryman(int $id): JsonResponse
-	{
-        $user = $this->orderRepository->showDeliveryman($id);
+	// public function showDeliveryman(int $id): JsonResponse
+	// {
+    //     $user = $this->orderRepository->showDeliveryman($id);
 
-        if (empty($user)) {
-            return $this->onErrorResponse([
-                'code' => ResponseError::ERROR_404,
-                'message' => __('errors.' . ResponseError::ERROR_404, locale: $this->language)
-            ]);
-        }
+    //     if (empty($user)) {
+    //         return $this->onErrorResponse([
+    //             'code' => ResponseError::ERROR_404,
+    //             'message' => __('errors.' . ResponseError::ERROR_404, locale: $this->language)
+    //         ]);
+    //     }
 
-		return $this->successResponse(ResponseError::NO_ERROR, UserResource::make($user));
-	}
+	// 	return $this->successResponse(ResponseError::NO_ERROR, UserResource::make($user));
+	// }
 
 	/**
 	 * Display the specified resource.
