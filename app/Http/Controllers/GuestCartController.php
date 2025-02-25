@@ -42,16 +42,33 @@ class GuestCartController extends Controller
 
 
         foreach ($request->cart_items as $item) {
-            CartDetail::create([
+            // Create main cart detail
+            $cartDetail = CartDetail::create([
                 'user_cart_id' => $usercart->id,
-                'stock_id' => $item['stock_id'],  // Assuming 'stock_id' refers to the product stock
+                'stock_id' => $item['stock_id'],  
                 'quantity' => $item['quantity'],
                 'price' => $item['price'],
-                'bonus' => $item['bonus'] ?? 0,  // Default bonus to 0 if not set
-                'discount' => $item['discount'] ?? 0,  // Default discount to 0 if not set
-                'bonus_type' => $item['bonus_type'] ?? null,  // Default to null if not set
+                'bonus' => $item['bonus'] ?? 0,
+                'discount' => $item['discount'] ?? 0,
+                'bonus_type' => $item['bonus_type'] ?? null,
             ]);
+        
+            if (!empty($item['addons'])) {
+                foreach ($item['addons'] as $addon) {
+                    CartDetail::create([
+                        'user_cart_id' => $usercart->id,
+                        'stock_id' => $addon['stock_id'], 
+                        'quantity' => $addon['quantity'],
+                        'price' => $addon['price'],
+                        'bonus' => 0, 
+                        'discount' => 0, 
+                        'bonus_type' => null,
+                        'parent_id' => $cartDetail->id // Linking addon to main item
+                    ]);
+                }
+            }
         }
+        
 
         return response()->json(['cart_id' => $cart->id, 'cart_uuid' => $usercart->uuid]);
     }
