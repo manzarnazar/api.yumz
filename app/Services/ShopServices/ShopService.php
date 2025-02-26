@@ -67,25 +67,25 @@ class ShopService extends CoreService implements ShopServiceInterface
             });
 
                   // Handle locations if provided
-        $locations = $data['shop_delivery_zipcodes'] ?? []; // Default to an empty array if locations is not provided
+        $locations = $data['shop_delivery_zipcodes'] ?? [];
 
-        // Decode locations if it's a string (e.g., JSON)
+
         if (is_string($locations)) {
-            $locations = json_decode($locations, true); // Decode outer JSON string to an array
+            $locations = json_decode($locations, true); 
         }
 
-        // Decode each location item if it's still a JSON string
+
         foreach ($locations as &$location) {
             if (is_string($location)) {
-                $location = json_decode($location, true); // Decode each item
+                $location = json_decode($location, true); 
             }
         }
 
-        // Remove duplicates based on location data
+
         $locations = array_map("unserialize", array_unique(array_map("serialize", $locations)));
 
       
-        // Insert locations into shop_delivery_zipcodes
+
         foreach ($locations as $location) {
             // Ensure all required fields are present
             if (!isset($location['zip_code'], $location['delivery_price'], $location['city'])) {
@@ -301,6 +301,7 @@ class ShopService extends CoreService implements ShopServiceInterface
 			'email_statuses' => data_get($data, 'email_statuses'),
 			'percentage'     => data_get($data, 'percentage', $shop?->percentage ?? 0),
 			'fixed_commission' => data_get($data, 'fixed_commission', $shop?->fixed_commission ?? 0),
+            'cvr_number' => data_get($data, 'cvr_number'), // Add this line
             'min_amount'     => data_get($data, 'min_amount', $shop?->min_amount ?? 0),
             'phone'          => data_get($data, 'phone'),
             'order_payment'  => data_get($data, 'order_payment', Shop::ORDER_PAYMENT_BEFORE),
