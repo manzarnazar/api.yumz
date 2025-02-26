@@ -33,6 +33,7 @@ use Illuminate\Support\Carbon;
  * @property float $rate_tax
  * @property float $percentage
  * @property float $fixed_commission
+ * @property string $cvr_number
  * @property array|null $location
  * @property string|null $phone
  * @property int|null $show_type
