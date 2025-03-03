@@ -27,7 +27,7 @@ Route::group(['prefix' => 'v1', 'middleware' => ['block.ip']], function () {
     
         Route::post('/guest-users', [GuestUserController::class, 'store'])->middleware('sessions');
         Route::post('/guest-cart', [GuestCartController::class, 'store'])->middleware('sessions');
-        Route::post('/create-payment', [PensopayController::class, 'createPayment']);
+        
 
 
 
@@ -305,6 +305,7 @@ Route::group(['prefix' => 'v1', 'middleware' => ['block.ip']], function () {
 		Route::post('split-mollie-process', 	 [Payment\MollieController::class, 	 	'splitTransaction']);
 		Route::post('split-maksekeskus-process', [Payment\MaksekeskusController::class, 'splitTransaction']);
 		Route::get('split-pay-fast-process', 	 [Payment\PayFastController::class, 	'splitTransaction']);
+        Route::post('/create-payment', [PensopayController::class, 'createPayment']);
 
 		Route::apiResource('delivery-points', Rest\DeliveryPointController::class)->only(['index', 'show']);
 	});
