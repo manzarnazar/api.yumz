@@ -27,29 +27,27 @@ class PensopayController extends Controller
     public function createPayment(Request $request)
     {
         try {
+            $orderId = 'ORDER_' . time(); // Ensure unique order_id
+    
             $response = $this->client->post('payments', [
                 'json' => [
-                    'amount'       => 500, // Amount in lowest currency unit
+                    'amount'       => 500,
                     'currency'     => 'DKK',
                     'callback_url' => 'https://example.com/callback',
                     'cancel_url'   => 'https://example.com/cancel',
                     'success_url'  => 'https://example.com/success',
-                    'order_id'     => '1234',
+                    'order_id'     => $orderId, // Use unique order_id
                     'methods'      => ['card', 'mobilepay', 'googlepay', 'applepay'],
                     'locale'       => 'en_US'
                 ]
             ]);
-
-         
+    
             return response()->json(json_decode($response->getBody(), true));
         } catch (RequestException $e) {
-            return response()->json([
-                'error' => true,
-                'message' => $e->getMessage()
-            ], 500);
+            return response('Error: ' . $e->getMessage(), 500);
         }
     }
-
+    
     // Handle Pensopay callback
     public function handleCallback(Request $request)
     {
