@@ -15,9 +15,9 @@ class PensopayController extends Controller
     {
         $this->apiKey = 'cd24a85dc8d033f488144d56daf1be129f7fb35288622b2eb33c5262309ed9d1';
         $this->client = new Client([
-            'base_uri' => 'https://api.pensopay.com/v2/', // FIXED base_uri
+            'base_uri' => 'https://api.pensopay.com/v2/', // Base URL only
             'headers' => [
-                'Authorization' => 'Bearer ' . $this->apiKey, // FIXED Authorization
+                'Authorization' => 'Bearer ' . $this->apiKey,
                 'Content-Type'  => 'application/json'
             ]
         ]);
@@ -27,20 +27,16 @@ class PensopayController extends Controller
     public function createPayment(Request $request)
     {
         try {
-            $response = $this->client->post('payments', [ // FIXED endpoint
+            $response = $this->client->post('payments', [
                 'json' => [
-                    'payment' => [
-                        'amount'       => 500, // Static for testing
-                        'currency'     => 'DKK',
-                        'callback_url' => 'https://example.com/callback', // Static for testing
-                        'cancel_url'   => 'https://example.com/cancel',
-                        'success_url'  => 'https://example.com/success',
-                        'order'        => [
-                            'order_id' => '1234'
-                        ],
-                        'methods'      => ['card', 'mobilepay', 'googlepay', 'applepay'],
-                        'locale'       => 'en_US'
-                    ]
+                    'amount'       => 500, // Amount in lowest currency unit
+                    'currency'     => 'DKK',
+                    'callback_url' => 'https://example.com/callback',
+                    'cancel_url'   => 'https://example.com/cancel',
+                    'success_url'  => 'https://example.com/success',
+                    'order_id'     => '1234',
+                    'methods'      => ['card', 'mobilepay', 'googlepay', 'applepay'],
+                    'locale'       => 'en_US'
                 ]
             ]);
 
