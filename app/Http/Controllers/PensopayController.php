@@ -33,7 +33,7 @@ class PensopayController extends Controller
                 'json' => [
                     'amount'       => $request['amount'],
                     'currency'     => 'DKK',
-                    "order_id" => $request['order_id'], // Unique order ID (required)
+                    'order_id'     => $orderId, // Use unique order_id
                     "autocapture" => true, // Optional: Automatically capture the payment
                     "callback_url" => "https://www.google.com/callback", // Optional: Callback URL
                     "cancel_url" => "https://www.google.com/cancel", // Optional: Cancel URL
