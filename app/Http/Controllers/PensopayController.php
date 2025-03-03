@@ -31,14 +31,18 @@ class PensopayController extends Controller
     
             $response = $this->client->post('payments', [
                 'json' => [
-                    'amount'       => 500,
+                    'amount'       => $request['amount'],
                     'currency'     => 'DKK',
-                    'callback_url' => 'https://example.com/callback',
-                    'cancel_url'   => 'https://example.com/cancel',
-                    'success_url'  => 'https://example.com/success',
-                    'order_id'     => $orderId, // Use unique order_id
+                    "order_id" => $request['order_id'], // Unique order ID (required)
+                    "autocapture" => true, // Optional: Automatically capture the payment
+                    "callback_url" => "https://www.google.com/callback", // Optional: Callback URL
+                    "cancel_url" => "https://www.google.com/cancel", // Optional: Cancel URL
+                    "success_url"=> "https://www.google.com/success", // Optional: Success URL
+                    "locale"=> "da-DK", // Locale for payment window (e.g., "da-DK" for Danish)
                     'methods'      => ['card', 'mobilepay', 'googlepay', 'applepay'],
-                    'locale'       => 'en_US'
+                    'locale'       => 'en_US',
+                    "testmode" => true, 
+
                 ]
             ]);
     
