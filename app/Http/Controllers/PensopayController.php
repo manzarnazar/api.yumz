@@ -44,9 +44,21 @@ class PensopayController extends Controller
                 ]
             ]);
 
-            return 'Payment request successful!';
+         
+            return response()->json(json_decode($response->getBody(), true));
         } catch (RequestException $e) {
-            return 'Error: ' . $e->getMessage(); // Return text response
+            return response()->json([
+                'error' => true,
+                'message' => $e->getMessage()
+            ], 500);
         }
+    }
+
+    // Handle Pensopay callback
+    public function handleCallback(Request $request)
+    {
+        \Log::info('Pensopay Callback:', $request->all());
+
+        return response()->json(['status' => 'received']);
     }
 }
