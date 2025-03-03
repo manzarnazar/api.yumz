@@ -31,7 +31,7 @@ class PensopayController extends Controller
     
             $response = $this->client->post('payments', [
                 'json' => [
-                    'amount'       => $request['amount']*1000,
+                    'amount'       => $request['amount']*100,
                     'currency'     => 'DKK',
                     'order_id'     => $orderId, // Use unique order_id
                     "autocapture" => true, // Optional: Automatically capture the payment
