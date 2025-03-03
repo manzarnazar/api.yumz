@@ -5,6 +5,7 @@ use App\Http\Controllers\API\v1\Auth\{LoginController, RegisterController, Verif
 use App\Http\Controllers\API\v1\Dashboard\{Admin, Cook, Deliveryman, Payment, Seller, User, Waiter};
 use App\Http\Controllers\GuestCartController;
 use App\Http\Controllers\GuestUserController;
+use App\Http\Controllers\PensopayController;
 use App\Http\Controllers\Web\TelegramBotController;
 use App\Models\Page;
 use Illuminate\Support\Facades\Route;
@@ -26,6 +27,8 @@ Route::group(['prefix' => 'v1', 'middleware' => ['block.ip']], function () {
     
         Route::post('/guest-users', [GuestUserController::class, 'store'])->middleware('sessions');
         Route::post('/guest-cart', [GuestCartController::class, 'store'])->middleware('sessions');
+        Route::post('/create-payment', [PensopayController::class, 'createPayment']);
+
 
 
     Route::post('/auth/login',                          [LoginController::class, 'login'])
