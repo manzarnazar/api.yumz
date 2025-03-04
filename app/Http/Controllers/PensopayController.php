@@ -63,4 +63,15 @@ class PensopayController extends Controller
 
         return response()->json(['message' => 'Callback received'], 200);
     }
+
+    public function paymentSuccess()
+    {
+        // \Log::info('Payment Callback:', $request->all());
+
+        // if ($request->event === 'paymentAuthorized') {
+        //     // Update order/payment status in the database
+        // }
+
+        return response()->json(['status' => 'success'], 200);
+    }
 }
