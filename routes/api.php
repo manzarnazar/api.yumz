@@ -307,7 +307,7 @@ Route::group(['prefix' => 'v1', 'middleware' => ['block.ip']], function () {
 		Route::get('split-pay-fast-process', 	 [Payment\PayFastController::class, 	'splitTransaction']);
         Route::post('/create-payment', [PensopayController::class, 'createPayment']);
         Route::post('/payment-callback', [PensopayController::class, 'paymentCallback']);
-        Route::get('/success', [PensopayController::class, 'paymentSuccess']);
+        Route::get('/payment-success', [PensopayController::class, 'paymentSuccess']);
 
 
 		Route::apiResource('delivery-points', Rest\DeliveryPointController::class)->only(['index', 'show']);
