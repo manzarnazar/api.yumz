@@ -37,7 +37,7 @@ class PensopayController extends Controller
                     "autocapture" => true,
                     "callback_url" => "https://api.yumz.dk/callback", 
                     "cancel_url" => "https://api.yumz.dk/v1/rest/cancel", 
-                    "success_url"=> "https://api.yumz.dk/v1/rest/success",
+                    "success_url"=> "https://api.yumz.dk/api/v1/rest/success",
                     "locale"=> "da-DK", 
                     'methods'      => ['card', 'mobilepay','anyday'],
                     'locale'       => 'en_US',
