@@ -23,23 +23,23 @@ class PensopayController extends Controller
         ]);
     }
 
-    // Create a new payment
+
     public function createPayment(Request $request)
     {
         try {
-            $orderId = 'ORDER_' . time(); // Ensure unique order_id
+            $orderId = 'ORDER_' . time(); 
     
             $response = $this->client->post('payments', [
                 'json' => [
                     'amount'       => $request['amount']*100,
                     'currency'     => 'DKK',
-                    'order_id'     => $orderId, // Use unique order_id
-                    "autocapture" => true, // Optional: Automatically capture the payment
-                    "callback_url" => "https://www.google.com/callback", // Optional: Callback URL
-                    "cancel_url" => "https://www.google.com/cancel", // Optional: Cancel URL
-                    "success_url"=> "https://www.google.com/success", // Optional: Success URL
-                    "locale"=> "da-DK", // Locale for payment window (e.g., "da-DK" for Danish)
-                    'methods'      => ['card', 'mobilepay', 'googlepay', 'applepay'],
+                    'order_id'     => $orderId, 
+                    "autocapture" => true,
+                    "callback_url" => "https://api.yumz.dk/callback", 
+                    "cancel_url" => "https://api.yumz.dk/cancel", 
+                    "success_url"=> "https://api.yumz.dk/success",
+                    "locale"=> "da-DK", 
+                    'methods'      => ['card', 'mobilepay','anyday'],
                     'locale'       => 'en_US',
                     "testmode" => true, 
 
@@ -53,10 +53,14 @@ class PensopayController extends Controller
     }
     
     // Handle Pensopay callback
-    public function handleCallback(Request $request)
+    public function paymentCallback(Request $request)
     {
-        \Log::info('Pensopay Callback:', $request->all());
+        \Log::info('Payment Callback:', $request->all());
 
-        return response()->json(['status' => 'received']);
+        if ($request->event === 'paymentAuthorized') {
+            // Update order/payment status in the database
+        }
+
+        return response()->json(['message' => 'Callback received'], 200);
     }
 }
