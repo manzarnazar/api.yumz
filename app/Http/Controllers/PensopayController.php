@@ -36,8 +36,8 @@ class PensopayController extends Controller
                     'order_id'     => $orderId, 
                     "autocapture" => true,
                     "callback_url" => "https://api.yumz.dk/callback", 
-                    "cancel_url" => "https://api.yumz.dk/v1/rest/cancel", 
-                    "success_url"=> "https://api.yumz.dk/api/v1/rest/success",
+                    "cancel_url" => "https://yumz.dk/cancel", 
+                    "success_url"=> "https://yumz.dk/success",
                     "locale"=> "da-DK", 
                     'methods'      => ['card', 'mobilepay','anyday'],
                     'locale'       => 'en_US',
@@ -64,8 +64,25 @@ class PensopayController extends Controller
         return response()->json(['message' => 'Callback received'], 200);
     }
 
-    public function paymentSuccess()
-    {
-        return response()->json(['status' => 'success'], 200);
+    public function paymentSuccess(Request $request)
+{
+    \Log::info('Payment Success:', $request->all());
+
+    // Validate and update the order/payment status in the database
+    if ($request->has('order_id')) {
+        $orderId = $request->order_id;
+
+        // Find and update order in the database (example)
+        // Order::where('order_id', $orderId)->update(['status' => 'paid']);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Payment successful',
+            'order_id' => $orderId
+        ], 200);
     }
+
+    return response()->json(['status' => 'error', 'message' => 'Invalid success response'], 400);
+}
+
 }
