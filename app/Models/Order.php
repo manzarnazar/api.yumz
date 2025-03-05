@@ -33,6 +33,7 @@ use Illuminate\Support\Facades\Schema;
  * @property int $currency_id
  * @property int $rate
  * @property string|null $note
+ * @property string|null $payment_status
  * @property string|null $image_after_delivered
  * @property int $shop_id
  * @property float $tax

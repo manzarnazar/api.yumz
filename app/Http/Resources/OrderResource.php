@@ -69,6 +69,7 @@ class OrderResource extends JsonResource
 			'seller_fee'                    => $this->when($this->seller_fee, $this->seller_fee),
 			'coupon_price'                  => $this->when($this->coupon_price, $this->coupon_price),
 			'rate'                          => $this->when($this->rate, $this->rate),
+			'payment_status'                => $this->when(isset($this->payment_status), (string) $this->payment_status),
 			'note'                          => $this->when(isset($this->note), (string) $this->note),
 			'order_details_count'           => $this->when($this->order_details_count, (int) $this->order_details_count),
 			'order_details_sum_quantity'    => $this->when($this->order_details_sum_quantity, $this->order_details_sum_quantity),

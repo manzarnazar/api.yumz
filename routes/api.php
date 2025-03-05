@@ -306,7 +306,7 @@ Route::group(['prefix' => 'v1', 'middleware' => ['block.ip']], function () {
 		Route::post('split-maksekeskus-process', [Payment\MaksekeskusController::class, 'splitTransaction']);
 		Route::get('split-pay-fast-process', 	 [Payment\PayFastController::class, 	'splitTransaction']);
         Route::post('/create-payment', [PensopayController::class, 'createPayment']);
-        Route::post('/payment-callback', [PensopayController::class, 'paymentCallback']);
+        Route::post('/payment-callback', [PensopayController::class, 'handleCallback'])->name('payment.callback');
         Route::get('/success', [PensopayController::class, 'paymentSuccess']);
 
 

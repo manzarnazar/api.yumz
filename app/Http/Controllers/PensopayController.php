@@ -35,9 +35,9 @@ class PensopayController extends Controller
                     'currency'     => 'DKK',
                     'order_id'     => $orderId, 
                     "autocapture" => true,
-                    "callback_url" => "https://api.yumz.dk/callback", 
-                    "cancel_url" => "https://yumz.dk/cancel", 
-                    "success_url"=> "https://yumz.dk/success",
+                    "callback_url" => route('payment.callback'), 
+                    "cancel_url" => $request['success_url'], 
+                    "success_url"=> "https://yumz.dk/cancel",
                     "locale"=> "da-DK", 
                     'methods'      => ['card', 'mobilepay','anyday'],
                     'locale'       => 'en_US',
@@ -53,7 +53,7 @@ class PensopayController extends Controller
     }
     
     // Handle Pensopay callback
-    public function paymentCallback(Request $request)
+    public function handleCallback(Request $request)
     {
         \Log::info('Payment Callback:', $request->all());
 
