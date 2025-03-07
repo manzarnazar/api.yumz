@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Order;
 use Illuminate\Http\Request;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
@@ -26,6 +27,7 @@ class PensopayController extends Controller
 
     public function createPayment(Request $request)
     {
+        Order::where('id', $request->order_id)->update(['status' => 'canceled']);
         try {
             $orderId = 'ORDER_' . time(); 
     
@@ -33,10 +35,10 @@ class PensopayController extends Controller
                 'json' => [
                     'amount'       => $request['amount']*100,
                     'currency'     => 'DKK',
-                    'order_id'     => $orderId, 
+                    'order_id'     => $request['order_id'], 
                     "autocapture" => true,
                     "callback_url" => route('payment.callback'), 
-                    "cancel_url" => "https://yumz.dk/cancel",
+                    "cancel_url" =>  $request['cancel_url'],
                     "success_url"=>  $request['success_url'], 
                     "locale"=> "da-DK", 
                     'methods'      => ['card', 'mobilepay','anyday'],
