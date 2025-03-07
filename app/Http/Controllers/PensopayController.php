@@ -59,8 +59,8 @@ class PensopayController extends Controller
     {
         \Log::info('Payment Callback:', $request->all());
 
-        if ($request->event === 'paymentAuthorized') {
-            // Update order/payment status in the database
+        if ($request->event === 'payment.authorized') {
+            Order::where('id', $request->order_id)->update(['status' => 'new']);
         }
 
         return response()->json(['message' => 'Callback received'], 200);
