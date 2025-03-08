@@ -26,33 +26,35 @@ class PensopayController extends Controller
 
 
     public function createPayment(Request $request)
-    {
-        // Order::where('id', $request->order_id)->update(['status' => 'canceled']);
-        try {
-            $orderId = 'ORDER_' . time(); 
-    
-            $response = $this->client->post('payments', [
-                'json' => [
-                    'amount'       => $request['amount']*100,
-                    'currency'     => 'DKK',
-                    'order_id'     => $request['order_id'], 
-                    "autocapture" => true,
-                    "callback_url" => route('payment.callback'), 
-                    "cancel_url" =>  $request['cancel_url'],
-                    "success_url"=>  $request['success_url'], 
-                    "locale"=> "da-DK", 
-                    'methods'      => ['card', 'mobilepay','anyday'],
-                    'locale'       => 'en_US',
-                    "testmode" => true, 
+{
+    try {
+        $orderId = 'ORDER_' . time(); 
 
-                ]
-            ]);
-    
-            return response()->json(json_decode($response->getBody(), true));
-        } catch (RequestException $e) {
-            return response('Error: ' . $e->getMessage(), 500);
-        }
+        $response = $this->client->post('payments', [
+            'json' => [
+                'amount'       => $request['amount'] * 100,
+                'currency'     => 'DKK',
+                'order_id'     => $request['order_id'], 
+                "autocapture"  => true,
+                "callback_url" => route('payment.callback'), 
+                "cancel_url"  => $request['cancel_url'],
+                "success_url"  => $request['success_url'], 
+                "locale"       => "da-DK", 
+                'methods'     => ['card', 'mobilepay', 'anyday'],
+                'locale'       => 'en_US',
+                "testmode"     => true, 
+            ]
+        ]);
+
+        return response()->json(json_decode($response->getBody(), true));
+    } catch (RequestException $e) {
+        // Return a JSON response with the error message
+        return response()->json([
+            'error' => 'Payment creation failed',
+            'message' => $e->getMessage()
+        ], 500);
     }
+}
     
     // Handle Pensopay callback
     public function handleCallback(Request $request)
