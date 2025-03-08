@@ -28,7 +28,7 @@ class PensopayController extends Controller
     public function createPayment(Request $request)
 {
     Order::where('id', $request->order_id)->update(['status' => 'canceled']);
-    $amount = Order::where('order_id', $request->order_id)->first(['total_price']);
+    $amount = Order::where('id', $request->order_id)->first(['total_price']);
 
     try {
 
