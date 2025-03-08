@@ -27,7 +27,7 @@ class PensopayController extends Controller
 
     public function createPayment(Request $request)
     {
-        Order::where('id', $request->order_id)->update(['status' => 'canceled']);
+        // Order::where('id', $request->order_id)->update(['status' => 'canceled']);
         try {
             $orderId = 'ORDER_' . time(); 
     
