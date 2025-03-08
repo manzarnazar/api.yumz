@@ -86,7 +86,7 @@ class PensopayController extends Controller
 
         } elseif ($event === 'payment.captured') {
             // Update order status to 'paid' for captured payments
-            Order::where('id', $resource['order_id'])->update(['status' => 'paid']);
+            Order::where('id', $resource['order_id'])->update(['status' => 'new']);
         } else {
             // Log unsupported events for further investigation
             \Log::warning('Unsupported payment event:', ['event' => $event]);
