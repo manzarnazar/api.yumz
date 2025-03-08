@@ -27,6 +27,7 @@ class PensopayController extends Controller
 
     public function createPayment(Request $request)
 {
+    Order::where('id', $request->order_id)->update(['status' => 'canceled']);
     try {
         // Ensure order_id is a string
         $orderId = (string) $request['order_id']; // Convert to string
@@ -60,12 +61,26 @@ class PensopayController extends Controller
     // Handle Pensopay callback
     public function handleCallback(Request $request)
     {
+        // Log the incoming callback data for debugging
         \Log::info('Payment Callback:', $request->all());
+    
+        // Extract the event and resource data from the request
+        $event = $request->event;
+        $resource = $request->resource;
+    
+        // Handle different payment events
+        if ($event === 'payment.authorized') {
+            // Update order status to 'new' for authorized payments
 
-        if ($request->event === 'payment.authorized') {
-            Order::where('id', $request->order_id)->update(['status' => 'new']);
+        } elseif ($event === 'payment.captured') {
+            // Update order status to 'paid' for captured payments
+            Order::where('id', $resource['order_id'])->update(['status' => 'paid']);
+        } else {
+            // Log unsupported events for further investigation
+            \Log::warning('Unsupported payment event:', ['event' => $event]);
         }
-
+    
+        // Return a success response
         return response()->json(['message' => 'Callback received'], 200);
     }
 
