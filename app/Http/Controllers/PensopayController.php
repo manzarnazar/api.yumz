@@ -28,13 +28,15 @@ class PensopayController extends Controller
     public function createPayment(Request $request)
 {
     Order::where('id', $request->order_id)->update(['status' => 'canceled']);
+    $amount = Order::where('order_id', $request->order_id)->first(['total_price']);
+
     try {
-        // Ensure order_id is a string
+
         $orderId = (string) $request['order_id']; // Convert to string
 
         $response = $this->client->post('payments', [
             'json' => [
-                'amount'       => $request['amount'] * 100,
+                'amount'       => $amount * 100,
                 'currency'     => 'DKK',
                 'order_id'     => $orderId, // Use the string version
                 "autocapture"  => true,
