@@ -28,21 +28,22 @@ class PensopayController extends Controller
     public function createPayment(Request $request)
 {
     try {
-        $orderId = 'ORDER_' . time(); 
+        // Ensure order_id is a string
+        $orderId = (string) $request['order_id']; // Convert to string
 
         $response = $this->client->post('payments', [
             'json' => [
                 'amount'       => $request['amount'] * 100,
                 'currency'     => 'DKK',
-                'order_id'     => $request['order_id'], 
+                'order_id'     => $orderId, // Use the string version
                 "autocapture"  => true,
                 "callback_url" => route('payment.callback'), 
-                "cancel_url"  => $request['cancel_url'],
-                "success_url"  => $request['success_url'], 
+                "cancel_url"   => $request['cancel_url'],
+                "success_url" => $request['success_url'], 
                 "locale"       => "da-DK", 
-                'methods'     => ['card', 'mobilepay', 'anyday'],
+                'methods'      => ['card', 'mobilepay', 'anyday'],
                 'locale'       => 'en_US',
-                "testmode"     => true, 
+                "testmode"    => true, 
             ]
         ]);
 
