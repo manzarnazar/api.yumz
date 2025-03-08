@@ -24,41 +24,51 @@ class PensopayController extends Controller
         ]);
     }
 
-
     public function createPayment(Request $request)
-{
-    Order::where('id', $request->order_id)->update(['status' => 'canceled']);
-    $amount = Order::where('id', $request->order_id)->first(['total_price']);
-
-    try {
-
-        $orderId = (string) $request['order_id']; // Convert to string
-
-        $response = $this->client->post('payments', [
-            'json' => [
-                'amount'       => $amount * 100,
-                'currency'     => 'DKK',
-                'order_id'     => $orderId, // Use the string version
-                "autocapture"  => true,
-                "callback_url" => route('payment.callback'), 
-                "cancel_url"   => $request['cancel_url'],
-                "success_url" => $request['success_url'], 
-                "locale"       => "da-DK", 
-                'methods'      => ['card', 'mobilepay', 'anyday'],
-                'locale'       => 'en_US',
-                "testmode"    => true, 
-            ]
-        ]);
-
-        return response()->json(json_decode($response->getBody(), true));
-    } catch (RequestException $e) {
-        // Return a JSON response with the error message
-        return response()->json([
-            'error' => 'Payment creation failed',
-            'message' => $e->getMessage()
-        ], 500);
+    {
+        // Update the order status to 'canceled'
+        Order::where('id', $request->order_id)->update(['status' => 'canceled']);
+    
+        // Fetch the total_price from the order
+        $order = Order::where('id', $request->order_id)->first(['total_price']);
+    
+        if (!$order) {
+            return response()->json([
+                'error' => 'Order not found',
+                'message' => 'The specified order does not exist.'
+            ], 404);
+        }
+    
+        // Extract the total_price value
+        $amount = $order->total_price;
+    
+        try {
+            $orderId = (string) $request['order_id']; // Convert to string
+    
+            $response = $this->client->post('payments', [
+                'json' => [
+                    'amount'       => $amount * 100, // Multiply the numeric value by 100
+                    'currency'     => 'DKK',
+                    'order_id'     => $orderId, // Use the string version
+                    "autocapture"  => true,
+                    "callback_url" => route('payment.callback'), 
+                    "cancel_url"   => $request['cancel_url'],
+                    "success_url"  => $request['success_url'], 
+                    "locale"       => "da-DK", 
+                    'methods'      => ['card', 'mobilepay', 'anyday'],
+                    "testmode"    => true, 
+                ]
+            ]);
+    
+            return response()->json(json_decode($response->getBody(), true));
+        } catch (RequestException $e) {
+            // Return a JSON response with the error message
+            return response()->json([
+                'error' => 'Payment creation failed',
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
-}
     
     // Handle Pensopay callback
     public function handleCallback(Request $request)
