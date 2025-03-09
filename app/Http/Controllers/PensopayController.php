@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use App\Models\Transaction;
 use Illuminate\Http\Request;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
@@ -47,9 +48,9 @@ class PensopayController extends Controller
     
             $response = $this->client->post('payments', [
                 'json' => [
-                    'amount'       => $amount * 100, // Multiply the numeric value by 100
+                    'amount'       => $amount * 100, 
                     'currency'     => 'DKK',
-                    'order_id'     => $orderId, // Use the string version
+                    'order_id'     => $orderId,
                     "autocapture"  => true,
                     "callback_url" => route('payment.callback'), 
                     "cancel_url"   => $request['cancel_url'],
@@ -87,6 +88,7 @@ class PensopayController extends Controller
         } elseif ($event === 'payment.captured') {
             // Update order status to 'paid' for captured payments
             Order::where('id', $resource['order_id'])->update(['status' => 'new']);
+            Transaction::where('payable_id', $resource['order_id'])->update(['status' => 'paid']);
         } else {
             // Log unsupported events for further investigation
             \Log::warning('Unsupported payment event:', ['event' => $event]);
