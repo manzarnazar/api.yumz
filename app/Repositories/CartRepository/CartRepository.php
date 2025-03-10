@@ -176,7 +176,7 @@ class CartRepository extends CoreRepository
 
                 /** @var CartDetail $cartDetail */
                 $totalTax += $cartDetail->stock->rate_tax_price;
-                $price    += $cartDetail->rate_price;
+                $price    += $cartDetail->rate_price * $cartDetail->quantity; // Multiply price by quantity
                 $discount += $cartDetail->rate_discount;
 
                 if (!$cartDetail->bonus) {
@@ -205,7 +205,7 @@ class CartRepository extends CoreRepository
                     }
 
                     $totalTax += $child->stock->rate_tax_price;
-                    $price    += $child->rate_price;
+                    $price    += $child->rate_price * $child->quantity; // Multiply price by quantity
                     $discount += $child->rate_discount;
                 }
 
