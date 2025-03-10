@@ -21,8 +21,10 @@ class GuestCartController extends Controller
             'name' => 'nullable|string'
         ]);
 
+        $pric = $request->total_price;
+
         // Create a new cart for the guest user
-        // Create a new cart for the guest user
+
         $cart = Cart::create([
             'guest_id' => $request->guest_id,
             'owner_id' => $request->user_id,
@@ -33,6 +35,7 @@ class GuestCartController extends Controller
             'rate' => 1, // Default rate, or fetch dynamically if needed
             'group' => 0, // Default group, can be changed if needed
         ]);
+        $total_pric= $cart->total_price;
         $usercart = UserCart::create([
             'cart_id' => $cart->id,
             'user_id' => $request->user_id,
@@ -70,7 +73,7 @@ class GuestCartController extends Controller
         }
         
 
-        return response()->json(['cart_id' => $cart->id, 'cart_uuid' => $usercart->uuid]);
+        return response()->json(['cart_id' => $cart->id, 'cart_uuid' => $usercart->uuid,"price" => $pric,"total_pric" => $total_pric]);
     }
 
     // Helper function to calculate total price
