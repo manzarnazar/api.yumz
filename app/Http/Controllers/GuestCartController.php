@@ -50,7 +50,7 @@ class GuestCartController extends Controller
                 'user_cart_id' => $usercart->id,
                 'stock_id' => $item['stock_id'],  
                 'quantity' => $item['quantity'],
-                'price' => $item['price'],
+                'price' => $item['price'] * $item['quantity'], // Multiply price with quantity
                 'bonus' => $item['bonus'] ?? 0,
                 'discount' => $item['discount'] ?? 0,
                 'bonus_type' => $item['bonus_type'] ?? null,
@@ -62,7 +62,7 @@ class GuestCartController extends Controller
                         'user_cart_id' => $usercart->id,
                         'stock_id' => $addon['stock_id'], 
                         'quantity' => $addon['quantity'],
-                        'price' => $addon['price'],
+                        'price' => $addon['price'] * $addon['quantity'], // Multiply price with quantity
                         'bonus' => 0, 
                         'discount' => 0, 
                         'bonus_type' => null,
@@ -71,6 +71,7 @@ class GuestCartController extends Controller
                 }
             }
         }
+        
         
 
         return response()->json(['cart_id' => $cart->id, 'cart_uuid' => $usercart->uuid,"price" => $pric,"total_pric" => $total_pric]);
