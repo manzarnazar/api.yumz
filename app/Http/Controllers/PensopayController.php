@@ -56,7 +56,7 @@ class PensopayController extends Controller
                     "cancel_url"   => $request['cancel_url'],
                     "success_url"  => $request['success_url'], 
                     "locale"       => "da-DK", 
-                    'methods'      => ['card', 'mobilepay', 'anyday'],
+                    'methods'      => ['card', 'wallet', 'paylater'],
                     "testmode"    => true, 
                 ]
             ]);
