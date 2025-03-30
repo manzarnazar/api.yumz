@@ -224,12 +224,12 @@ class CartRepository extends CoreRepository
 
        
     
-		if (data_get($data, 'zipcode')) {
-            $zipcode = data_get($data, 'zipcode');
+		if (data_get($data, 'city')) {
+            $zipcode = data_get($data, 'city');
         
             // Fetch delivery price for the given zipcode
             $deliveryZipcode = DB::table('shop_delivery_zipcodes')
-                ->where('zip_code', $zipcode)
+                ->where('city', $zipcode)
                 ->where('shop_id', $cart->shop->id)
                 ->first();
         
